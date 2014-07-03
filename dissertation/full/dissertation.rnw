@@ -1,0 +1,101 @@
+\documentclass[justified]{tufte-book}
+
+<<settings, include=FALSE>>=
+opts_chunk$set(concordance=TRUE, cache=TRUE);
+@
+
+% =================
+% Macro definitions
+% =================
+%\newcommand{\gene}[1]{\verb{$#1$}}
+\makeatletter
+
+\let\orig@maketag@@@\maketag@@@
+\renewcommand{\eqref}[1]{\textup{\let\maketag@@@\orig@maketag@@@\tagform@{\ref{#1}}}}
+\def\maketag@@@#1{\hbox{\rlap{\kern\marginparsep\m@th\normalfont#1}\kern1sp}}
+
+\makeatother
+
+%\graphicspath{ {plots/}{results/v1/} }
+
+% Book metadata
+\title{Dissertation: draft}
+\author[Kiran V Garimella]{Kiran V Garimella}
+\publisher{Wellcome Trust Centre for Human Genetics}
+\makeindex
+
+\begin{document}
+
+% ===========
+% Page: title
+% ===========
+\maketitle
+
+% ===============
+% Page: copyright
+% ===============
+\begin{fullwidth}
+~\vfill
+\thispagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\baselineskip}
+Copyright \copyright\ \the\year\ \thanklessauthor
+
+\par\smallcaps{Published by \thanklesspublisher}
+
+\par\smallcaps{www.well.ox.ac.uk}
+
+\par All rights reserved.
+
+\par\textit{First printing, \monthyear}
+\end{fullwidth}
+
+% ==============
+% Page: contents
+% ==============
+\tableofcontents
+
+% =====================
+% Page: list of figures
+% =====================
+\listoffigures
+
+% ====================
+% Page: list of tables
+% ====================
+\listoftables
+
+% =================
+% Chapter: abstract
+% =================
+\cleardoublepage
+\chapter{Abstract}
+
+This is a working draft of my dissertation.
+
+\mainmatter
+\setcounter{secnumdepth}{2}
+\makeatletter
+\titleformat{\chapter}%
+  [block]% shape
+  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}% format applied to label+text
+  {\itshape\huge\thechapter\quad}% label
+  {0pt}% horizontal separation between label and title body
+  {\huge\rmfamily\itshape}% before the title body
+  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]% after the title body
+\makeatother
+
+% ======================
+% Chapter: Recombination
+% ======================
+%\chapter{Recombination}
+%\label{ch:recombination}
+\input{../recombination/recombination.tex}
+
+% =====================
+% Chapter: bibliography
+% =====================
+\bibliography{/Users/kiran/Documents/allpapers}
+\bibliographystyle{plainnat}
+
+\end{document}
