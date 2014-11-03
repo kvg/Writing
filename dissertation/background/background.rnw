@@ -9,3 +9,16 @@
 \subsubsection{Small (indels)}
 \subsubsection{Large (fusions, NAHR)}
 \subsubsection{Chromosomal changes}
+
+\section{Rates}
+
+\section{Factors influencing}
+\subsection{Replication time}
+\subsection{Mat/pat age effects}
+\subsection{Biases/locality}
+
+\section{Known events in species}
+\subsection{P.f.}
+\subsection{Human}
+\subsection{Chimp}
+\subsection{Others}
