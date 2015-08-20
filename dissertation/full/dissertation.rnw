@@ -1,4 +1,4 @@
-\documentclass[justified]{tufte-book}
+\documentclass[12pt]{ociamthesis}
 
 <<settings, include=FALSE>>=
 opts_chunk$set(concordance=TRUE, cache=TRUE);
@@ -7,87 +7,64 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 % =================
 % Macro definitions
 % =================
-%\newcommand{\gene}[1]{\verb{$#1$}}
-\makeatletter
 
-\let\orig@maketag@@@\maketag@@@
-\renewcommand{\eqref}[1]{\textup{\let\maketag@@@\orig@maketag@@@\tagform@{\ref{#1}}}}
-\def\maketag@@@#1{\hbox{\rlap{\kern\marginparsep\m@th\normalfont#1}\kern1sp}}
+\usepackage{amssymb}
+\usepackage{hyperref}
 
-\makeatother
+\RequirePackage[osf,sc]{mathpazo}
+\RequirePackage[scaled=0.90]{helvet}
+\RequirePackage[scaled=0.85]{beramono}
+\RequirePackage[T1]{fontenc}
+\RequirePackage{textcomp}
+\RequirePackage{titlesec,titletoc}
 
-%\graphicspath{ {plots/}{results/v1/} }
+\titleformat{\chapter}[hang]{\itshape\huge}{\thechapter}{1em}{}[]
+\titleformat{\section}[hang]{\normalfont\Large\itshape}{\thesection}{1em}{}[]
+\titleformat{\subsection}[hang]{\normalfont\large\itshape}{\thesubsection}{1em}{}[]
+\titleformat{\subsubsection}[hang]{\normalfont\normalsize\itshape}{\thesubsubsection}{1em}{}[]
+\titleformat{\paragraph}[runin]{\normalfont\itshape}{\theparagraph}{1em}{}[]
 
-% Book metadata
+%\titlespacing*{\chapter}{0pt}{50pt}{40pt}
+%\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+%\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus.2ex}
+%\titlespacing*{\subsubsection}{0pt}{3.0ex plus 1ex minus .2ex}{0.7ex plus.2ex}
+
+% =============
+% Configuration
+% =============
 \title{Hypothesis-free detection of genome-changing events in pedigree sequencing}
-\author[Kiran V Garimella]{Kiran V Garimella}
-\publisher{Wellcome Trust Centre for Human Genetics}
-\makeindex
+\author{Kiran V Garimella}
+\college{Green Templeton College}
+\degree{Doctor of Philosophy}
+\degreedate{Michaelmas 2015}
 
 \begin{document}
 
-% ===========
-% Page: title
-% ===========
-\maketitle
+\baselineskip=18pt plus1pt  % this baselineskip gives sufficient line spacing for an examiner to easily markup the thesis with comments
+\setcounter{secnumdepth}{3} % set the number of levels in each section heading
+\setcounter{tocdepth}{3}    % set the number of levels in each chapter heading
 
-% ===============
-% Page: copyright
-% ===============
-\begin{fullwidth}
-~\vfill
-\thispagestyle{empty}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{\baselineskip}
-Copyright \copyright\ \the\year\ \thanklessauthor
+% ========
+% Preamble
+% ========
+\pagenumbering{gobble}
+\maketitle                  % create a title page from the preamble info
+\include{dedication}        % include a dedication.tex file
+\include{acknowledgements}  % include an acknowledgements.tex file
+\include{abstract}          % include the abstract
+\pagenumbering{arabic}
 
-\par\smallcaps{Published by \thanklesspublisher}
-
-\par\smallcaps{www.well.ox.ac.uk}
-
-\par All rights reserved.
-
-\par\textit{First printing, \monthyear}
-\end{fullwidth}
-
-% ==============
-% Page: contents
-% ==============
-\tableofcontents
-
-% =====================
-% Page: list of figures
-% =====================
-\listoffigures
-
-% ====================
-% Page: list of tables
-% ====================
-\listoftables
-
-% =================
-% Chapter: abstract
-% =================
-\cleardoublepage
-\chapter{Abstract}
-
-This is a working draft of my dissertation.
-
-\mainmatter
-\setcounter{secnumdepth}{3}
-\makeatletter
-\titleformat{\chapter}%
-  [block]% shape
-  {\relax\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\begin{fullwidth}}{}}% format applied to label+text
-  {\itshape\huge\thechapter\quad}% label
-  {0pt}% horizontal separation between label and title body
-  {\huge\rmfamily\itshape}% before the title body
-  [\ifthenelse{\NOT\boolean{@tufte@symmetric}}{\end{fullwidth}}{}]% after the title body
-\makeatother
+\begin{romanpages}          % start roman page numbering
+\tableofcontents            % generate and include a table of contents
+\listoffigures              % generate and include a list of figures
+\end{romanpages}            % end roman page numbering
 
 % ========
 % Chapters
 % ========
+%\include{chapter1}
+%\include{chapter2}
+%\include{conclusions}
 \input{../introduction/introduction.tex}
 \input{../background/background.tex}
 \input{../detection/detection.tex}
@@ -96,9 +73,16 @@ This is a working draft of my dissertation.
 \input{../chimp/chimp.tex}
 \input{../discussion/discussion.tex}
 
-% =====================
-% Chapter: bibliography
-% =====================
+%now enable appendix numbering format and include any appendices
+%\appendix
+%\include{appendix1}
+%\include{appendix2}
+
+% ============
+% Bibliography
+% ============
+\addcontentsline{toc}{chapter}{Bibliography}
+\renewcommand{\bibname}{References}
 \bibliography{/Users/kiran/Documents/allpapers}
 \bibliographystyle{plainnat}
 

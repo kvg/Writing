@@ -21,12 +21,14 @@ chimp/chimp.tex: chimp/chimp.rnw
 discussion/discussion.tex: discussion/discussion.rnw
 	cd discussion && Rscript -e "library(knitr); knit('discussion.rnw')"
 
-full/dissertation.tex: introduction/introduction.tex background/background.tex detection/detection.tex methods/methods.tex pf/pf.tex chimp/chimp.tex discussion/discussion.tex full/dissertation.rnw
+full/dissertation.tex: full/acknowledgements.tex full/dedication.tex full/abstract.tex introduction/introduction.tex background/background.tex detection/detection.tex methods/methods.tex pf/pf.tex chimp/chimp.tex discussion/discussion.tex full/dissertation.rnw
 	cd full && Rscript -e "library(knitr); knit('dissertation.rnw')"
 
 dissertation.pdf: full/dissertation.tex full/tufte-book.cls full/tufte-common.def
-	cd full && pdflatex dissertation.tex && bibtex dissertation.aux && pdflatex dissertation.tex && pdflatex dissertation.tex
-	#cd full && pdflatex dissertation.tex && pdflatex dissertation.tex && pdflatex dissertation.tex
+	cd full && pdflatex dissertation.tex
+	cd full && bibtex dissertation.aux
+	cd full && pdflatex dissertation.tex
+	cd full && pdflatex dissertation.tex
 	cp full/dissertation.pdf dissertation.pdf
 
 tidy:
