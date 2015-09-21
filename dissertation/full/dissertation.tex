@@ -57,6 +57,11 @@
 
 \usepackage{amssymb}
 \usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[font=scriptsize,labelfont=bf]{caption}
+\usepackage[superscript]{cite}
+\renewcommand{\citedash}{--}
 
 \RequirePackage[osf,sc]{mathpazo}
 \RequirePackage[scaled=0.90]{helvet}
@@ -75,6 +80,13 @@
 %\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
 %\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus.2ex}
 %\titlespacing*{\subsubsection}{0pt}{3.0ex plus 1ex minus .2ex}{0.7ex plus.2ex}
+
+\providecommand\newthought[1]{%
+   \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
+   \noindent\textsc{#1} % small caps text out
+}
+
+\graphicspath{{../motivation/figure/}{../genotyper/figure/}}
 
 % =============
 % Configuration
@@ -112,10 +124,10 @@
 %\include{chapter1}
 %\include{chapter2}
 %\include{conclusions}
-\input{../introduction/introduction.tex}
+\input{../motivation/motivation.tex}
 \input{../background/background.tex}
 \input{../detection/detection.tex}
-\input{../methods/methods.tex}
+\input{../genotyper/genotyper.tex}
 \input{../pf/pf.tex}
 \input{../chimp/chimp.tex}
 \input{../discussion/discussion.tex}
@@ -131,6 +143,6 @@
 \addcontentsline{toc}{chapter}{Bibliography}
 \renewcommand{\bibname}{References}
 \bibliography{/Users/kiran/Documents/allpapers}
-\bibliographystyle{plainnat}
+\bibliographystyle{unsrt}
 
 \end{document}
