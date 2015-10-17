@@ -1,6 +1,8 @@
 \chapter{Motivation}
 \label{ch:motivation}
 
+\section{Introduction}
+
 \newthought{In 1905, William Bateson, Edith Saunders, and Reginald Punnett} published results on their work with dihybrid crosses of pea plants.  Having previously established the dominance of two phenotypes (purple flowers over red, and long pollen grains over round), the trio crossed pea plants exhibiting both dominant or both recessive traits for successive generations.  Crossing the first generation was expected to yield progeny with phenotype ratios following the $9$:$3$:$3$:$1$ pattern according to the Law of Independent Assortment, established by Gregor Mendel $40$ years prior.  However, the observed ratios differed wildly from this expectation, heavily skewed towards the parental combination of phenotypes.  Bateson \textit{et al.} hypothesized that alleles controlling the two traits must be linked and transmitted to the progeny together by some unknown mechanism~\cite{Bateson:1908dq}.
 
 Seven years later, Thomas Morgan noted an even more aberrant inheritance pattern in a dihybrid cross of white-eyed male and red-eyed female \textit{Drosophila melanogaster} flies: no white-eyed females were observed in the progeny.  A follow-up experiment crossing the original white-eyed male with its $F_{1}$ daughters produced four roughly equal-sized groups of red-eyed and white-eyed males and females, suggesting the white-eyed factor must be linked to the male sex factor.  Morgan proposed that these factors (what we now refer to as genes) are real entities, physically located on chromosomes, and when found on the same chromosome, do not (necessarily) sort independently~\cite{Morgan:1910hg}.
@@ -18,29 +20,184 @@ Today, linkage analysis in experimentally controlled crosses (like the pea plant
 pyrimethamine sensitivity        & -   & +   &     &     &     &     \\
 chloroquine sensitivity          &     & +   & -   &     &     &     \\
 infects mosquitoes easily        &     & +   & -   &     &     &     \\
-infects \textit{Aotus nancymaae} &     &     &     & -   & +   &     \\
+infects \textit{Aotus nancymaae} &     &     &     & -   & +   & -   \\
+artemisinin sensitivity          &     &     &     &     & +   & -   \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\section{\textit{De novo} mutation (DNM)}
+
 Many clinically relevant phenotypes are not inherited, but instead arise anew within the children.  Cytoadherence and antigenic properties of parasites facilitate evasion from host immune attack, and can differ substantially from the properties of their progenitors.  In 2000, Freitas-Junior \textit{et al.} showed that some 3D7 x HB3, HB3 x DD2, and HB3 x HB3 progeny harbored non-parental forms of subtelomeric \textit{var} genes, key members of an antigenic gene family\cite{FreitasJunior:2000cp}.  These altered forms were likely generated during mitosis by non-allelic homologous recombination\footnote{sometimes referred to as "ectopic" (aberrant) recombination in the literature} (NAHR) of telomeres from two different chromosomes\cite{Duffy:2009cc}.  The resulting genes are novel, functional, and never before observed by the host immune system.
 
-These uninherited and spontaneous, or "\textit{de novo}" mutations (DNMs) are critical tools for pathogenic adaption (and perhaps in higher-order organisms, maladaption).  Pathogens are under constant immune and intermittent drug pressure.  NAHR serves to further diversify a pathogen's antigenic repertoire, enabling continued evasion of immunological actors.  Random, spontaneous point mutations eventually produce a drug-resistant parasite, capable of surviving the onslaught and reproducing.
+These uninherited and spontaneous, or "\textit{de novo}" mutations (DNMs) are critical tools for pathogenic adaption (and perhaps in higher-order organisms, maladaption).  Pathogens are under constant immune and intermittent drug pressure.  NAHR can further diversify a pathogen's antigenic repertoire, enabling continued evasion of immunological actors.  Duplications of a transporter gene may enable faster drug clearance in a parasite, thus conferring resistance.  Spontaneous point mutations may alter the binding site of a drug to a receptor, thus conferring immunity. 
+
+\subsection{Identification and evaluation of variation in genomes}
 
 With the advent of sequencing technologies, it is now straightforward to discover many DNMs.  Long reads (\textasciitilde $500$ bp) from the first-generation sequencing technology, Sanger sequencing, can be stitched together \textit{in silico} by considering the overlaps of sequences generated from many copies of the genome\cite{Myers:1995vma}.  This has enabled the assembly of full-length genomes and subsequent gene annotations for a single representative (or "reference") individual in a population.  Second-generation sequencing is leveraging economies of scale to reduce sequencing costs by several orders of magnitude\cite{Mardis:2011cr}.  The reads it produces are shorter (\textasciitilde $100$ bp) and more error-prone, but billions of them can be produced quickly.  Like the long reads, the short read data can also be assembled into a new genome, albeit with more errors and gaps, owing to the difficulty of overcoming large repetitive regions with short genomic fragments\cite{Schatz:2010if}.  Alternatively, assuming the sequence for the reference genome and a new individual are highly similar, it is far more common (and computationally more efficient) to align the reads to the reference\cite{Flicek:2009dl}.  String matching algorithms that allow mismatches, insertion, and deletions to appear in the alignments allow millions of sequnced reads to be placed on the reference genome quickly.  Separate tools can then examine the alignments, looking for the presence of non-reference alleles, and using statistical approaches to call and genotype variants with high accuracy\cite{Nielsen:2011kz}.
 
-Variant calling software has been successfully applied to many sequencing datasets for the discovery of DNMs.  These variant callsets have provided insight into the development of drug resistance\cite{Woodford:2007it}, the genetic architecture of some common diseases\cite{Neale:2012ki}, and mutational rates in humans and chimpanzees with a strong paternal age effect.\cite{Conrad:2011eh,Venn:2014ep,Kloosterman:2015cn,Francioli:2015kj}.  Many groups have released sophisticated software packages to facilitate these analyses and detailed instructions on their use\cite{DePristo:2011fo,Rimmer:2014ho}.
+Variant calling software has been successfully applied to many sequencing datasets for the discovery of DNMs.  These variant callsets have provided insight into the development of drug resistance\cite{Woodford:2007it}, the genetic architecture of some common diseases\cite{Neale:2012ki}, and mutational rates in humans and chimpanzees with a strong paternal age effect\cite{Conrad:2011eh,Venn:2014ep,Kloosterman:2015cn,Francioli:2015kj}.  Many groups have released sophisticated software packages to facilitate these analyses and detailed instructions on their use\cite{DePristo:2011fo,Rimmer:2014ho}.
 
 Specificity and sensitivity are crucial metrics to consider for any variant callset.  There are many approaches to establishing the specificity of a DNM callset.  For select variants (typically on the order of \textasciitilde $100$ variants from a callset), Sanger sequencing, Sequenom assays, and even targeted third-generation sequencing (i.e. PacBio sequencing, which can generate reads up to \textasciitilde $50,000$ bp as of this writing) have been used successfully to validate mutations.  Establishing sensitivity is much more difficult, and in some cases, overall sensitivity to DNMs will be much lower than one might initially appreciate.  The underlying assumption that two genomes from the same species should be very similar is likely inappropriate for highly diverse populations (e.g. pathogens) or hypervariable regions (e.g. immune loci in mammals).  If a haplotype present in the sample is too dissimilar to the reference, or perhaps even completely absent, read aligners may return incorrect results.  Reads may align to the wrong location, the resultant mismatches mistaken for real mutations.  Alternatively, they may fail to align at all, thus obscuring evidence of real variation.
 
-Instead, it may be possible to establish the sensitivity of the reference-based protocol by considering how DNMs alter the genome of a sample with respect to its progenitors.  Consider a site where a DNM - say, a single SNP - has occurred, as depicted in Figure \ref{fig:kmer_venn}.  Although a single base of the genome has been altered, when the genome is divided into fixed-length words of length $k$, or "kmers", we find $k$ kmers that are present in the child but absent in the parents.  In this manner, DNM could be considered generators of "novel" kmers.  These kmers can be used as a signal to indicate the presence of a \textit{de novo} variant.  By choosing $k$ to be reasonably large so as to avoid analyzing short sequences that pervade the genome (half to two-thirds the length of a read will suffice), we can simply count continuous stretches of novel kmers as a proxy for the number of DNMs.
+\subsection{A reference-free approach for assessing DNM sensitivity}
+
+Instead, it may be possible to establish the sensitivity of the reference-based protocol by considering how DNMs alter the genome of a sample with respect to its progenitors.  Consider a site where a DNM - say, a single SNP - has occurred, as depicted in Figure \ref{fig:kmer_venn}.  Although a single base of the genome has been altered, when the genome is divided into fixed-length words of length $k$, or "kmers", we find $k$ kmers that are present in the child but absent in the parents.  In this manner, DNMs can be considered generators of "novel" kmers - kmers present in the child but absent in the parents.  These kmers can be used as a signal to indicate the presence of a \textit{de novo} variant.  By choosing $k$ to be reasonably large so as to avoid analyzing short sequences that pervade the genome (half to two-thirds the length of a read will suffice), we can simply count continuous stretches of novel kmers as a proxy for the number of DNMs.
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{kmer_venn}
-  \caption{a. Parental and child sequences at the site of a \textit{de novo} mutation, and the kmers generated at $k=3$.  b. The resulting Venn diagram of kmers found exclusively in the parents, the child, or common to both.}
+  \caption{a. Parental and child sequences at the site of a \textit{de novo} mutation, and the kmers generated at $k=3$.  b. The resulting Venn diagram of kmers found exclusively in the parents, the child, or common to both.  c. Novel kmers found around the genome indicate the presence of a \textit{de novo} mutation.}
   \label{fig:kmer_venn}
 \end{figure}
 
-Similarly, if we regard DNM to be generators of novelty, the de novo variant calls we produce with the reference-based protocol should yield an identical set of novel kmers.  One must simply take all of the variant calls (inherited and de novo events) obtained for the child and apply this as a delta to the reference genome.  At de novo mutations, we extract the local sequence context and divide the data into kmers.  If the reference-based analysis and reference-free analysis yield similar number of kmers, then we have found all of the de novo variants.
+This approach gives us a powerful, reference-free mechanism to verify the results of the reference-based analysis.  Sequencing of the whole genome is independent of any reference sequence that may already exist for the sample, and given sufficient coverage (Table \ref{tb:lw_cov} shows the requirements, assuming $76$ bp reads and a $23$ megabase genome), the raw data from a sequencing experiment should contain the full set of DNM-generated novel kmers, regardless of any mapping issues\cite{Lander:1988bp}.  Taking the reads that map, calling \textit{de novo} variants, and extracting the novel kmers from the immediate vicinity should theoretically reproduce that set.  Comparing the expected (reference-free) set to the observed (reference-based) kmer set should thus provide the sought sensitivity measure.
 
+\begin{table}[]
+\centering
+\caption{Theoretical percentage of the genome recovered at a target depth of coverage.}
+\label{tb:lw_cov}
+
+\begin{tabular}{llll}
+\toprule
+coverage & numReads & numNucleotides & pctGenome\\
+\midrule
+1 & 302631 & 2.3e+07 & 63.21\\
+2 & 605263 & 4.6e+07 & 86.47\\
+3 & 907894 & 6.9e+07 & 95.02\\
+4 & 1210526 & 9.2e+07 & 98.17\\
+5 & 1513157 & 1.15e+08 & 99.33\\
+6 & 1815789 & 1.38e+08 & 99.75\\
+7 & 2118421 & 1.61e+08 & 99.91\\
+8 & 2421052 & 1.84e+08 & 99.97\\
+9 & 2723684 & 2.07e+08 & 99.99\\
+10 & 3026315 & 2.3e+08 & 100.00\\
+11 & 3328947 & 2.53e+08 & 100.00\\
+12 & 3631578 & 2.76e+08 & 100.00\\
+13 & 3934210 & 2.99e+08 & 100.00\\
+14 & 4236842 & 3.22e+08 & 100.00\\
+15 & 4539473 & 3.45e+08 & 100.00\\
+16 & 4842105 & 3.68e+08 & 100.00\\
+17 & 5144736 & 3.91e+08 & 100.00\\
+18 & 5447368 & 4.14e+08 & 100.00\\
+19 & 5750000 & 4.37e+08 & 100.00\\
+20 & 6052631 & 4.6e+08 & 100.00\\
+\bottomrule
+\end{tabular}
+
+
+\end{table}
+
+\section{DNM sensitivity of the reference-based approach}
+
+We now demonstrate these ideas on real data sets that will be used throughout this dissertation: experimental crosses between malaria parasites (\textit{Plasmodium falciparum}). %, and a two-generation pedigree of human's closest extant ancestor (and susceptible to \textit{falciparum} malaria), chimpanzees (\textit{Pan troglodytes})\footnote{Note that, while chimpanzees are used as an \textit{in vivo} model for the malaria parasite's liver stage in the production of the crosses, these two datasets are not related to one another.}.
+
+\subsection{\textit{Plasmodium falciparum}}
+
+The datasets that we'll be referring to in this work are summarized in Table \ref{tb:cross_info}.  For simplicity, we shall focus on the samples from the 3D7xHB3 cross.
+
+\begin{table}[]
+\centering
+\caption{The \textit{P. falciparum} datasets that will be referred to throughout this work.}
+\label{tb:cross_info}
+\begin{tabular}{@{}rcccc@{}}
+\toprule
+                  & 3D7xHB3      & HB3xDD2      & 7G8xGB4      & 803xGB4      \\
+\midrule
+progeny           & 16           & 39           & 41           & 34           \\
+read length       & 76           & 76           & 76           & 100          \\
+fragment size     & $304 \pm 32$ & $251 \pm 50$ & $295 \pm 23$ & $222 \pm 10$ \\
+coverage          & $96 \pm 40$  &              &              &              \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Data processing}
+We first generated the list of expected novel kmers by processing the raw sequencing data for each sample with the \textit{de novo} assembly software, Cortex\cite{Iqbal:2012fx} at $k=47$, standard settings for other parameters, and no error cleaning.  We produced the initial list of putative novel kmers by selecting kmers present in a child but absent in both parents.  We further produced a "confident" list of novel kmers by imposing a kmer coverage threshold, automatically determined by a custom algorithm designed to find a local minimum on the LOESS regression of the coverage distribution, as shown in Figure \ref{fig:kmer_cov_dist}.  Finally, we produce a "trusted" list of novel kmers by removing kmers originating from possible contaminants, as determined by performing a BLAST search on the confident list and removing all non-\textit{Plasmodium} hits.  These steps ensure that the list of trusted novel kmers is very restrictive.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{{{PG0063-C.ERR019060.kmerCovThreshold}}}
+  \caption{Kmer coverage distribution for a single 3D7xHB3 progeny, PG0063-C.  Red line indicates non-parametric LOESS fit upon which the local minimum is detected.}
+  \label{fig:kmer_cov_dist}
+\end{figure}
+
+We aligned each sample's reads to the PlasmoDB 9.0 release of the \textit{Plasmodium falciparum} genome\cite{Gardner:2002p1564,Aurrecoechea:2009hh} using BWA-MEM\cite{Li:2013wn}.  We followed data processing guidelines as specified in the Genome Analysis Toolkit (GATK) best-practices documentation\cite{DePristo:2011fo,McKenna:2010p535}, flagging duplicate reads so that they are ignored downstream, and recalibrating base quality scores using the MalariaGen data release on the crosses as a truth set\cite{huh}.  As recent guidance by the authors indicates the GATK's variant calling software has internalized the local indel realignment functionality, we opted to forego running this step separately.  We called variants across all $18$ samples (parents and progeny) simultaneously using the GATK's HaplotypeCaller with standard settings and a ploidy of $1$.
+
+A complete and perfect variant callset details the alterations that must be performed on the reference sequence in order to generate the genome of the sequenced sample.  Unfortunately, it is typically not possible to obtain a perfectly sensitive and specific callset.  False positives and false negatives proximal to true positives may interfere with our ability to generate the true underlying haplotype sequence.  To bypass this problem, we did not filter the variant callset.  Instead, we combinatorically generate all possible subsets of variants found within $100$ bp of each other using a recursive strategy to leave single elements out of a given set of kmers, presented in Algorithm \ref{alg:all_subsets}.  This will certainly generate vastly more kmers than truly exist in the sample's genome.  However, as we are only interested in verifying that the variant-induced kmers are present in our trusted novel kmer set, this approach has the benefit of providing maximum sensitivity.
+
+\begin{algorithm}
+\caption{Given a set of variants, generate all possible subsets of variants}
+\label{alg:all_subsets}
+\begin{algorithmic}[1]
+\Function{generateAllPossibleSubsets}{variants}
+    \State $\textit{loos} \gets []$
+
+    \For{$i \gets 0 \textrm{ to } length(variants)$}
+        \State $\textit{loo} \gets []$
+
+        \For{$j \gets 0 \textrm{ to } length(variants)$}
+            \If{$i \neq j$}
+                \State $\textit{loo.add(variants[j])}$
+            \EndIf
+        \EndFor
+
+        \If{$\textit{loo.size()} \ge 0$}
+            \State $\textit{loos.add(loo)}$
+        \EndIf
+
+        \If{$\textit{loo.size()} \ge 1$}
+            \State $\textit{generateAllPossibleSubsets(loo)}$
+        \EndIf
+    \EndFor
+
+    \State $\textit{return loos}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Results}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{loadTables-1}
+  \caption{Novel kmers observed in the reference-based analysis vs trusted novel kmers expected from the reference-free analysis.}
+  \label{fig:obs_vs_exp_kmers}
+\end{figure}
+
+Figure \ref{fig:obs_vs_exp_kmers} shows the results of our reference-based vs reference-free analysis.  Per sample, our restrictive reference-free analysis has generated hundreds of trusted novel kmers to explain.  However, the reference-based analysis recapitulates only a fraction of these - only about $13\%$ on average.
+
+Attempting to explain where these missing kmers have gone, we searched the reads for every trusted novel kmer.  More than $80\%$ of reads containing these kmers were found to map to multiple homes in the genome (summarized per sample in Figure \ref{fig:mapping}).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{mapping-1}
+  \caption{Reads that map once to the reference genome versus mapping multiple times, conditioned on the read containing a trusted novel kmer.}
+  \label{fig:mapping}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{ref_venn_HB3}
+  \caption{Venn diagram of kmers present in the 3D7 and HB3 genomes at $k=47$.  Both forward and reverse-compliment kmers are considered the same.}
+  \label{fig:ref_venn_HB3}
+\end{figure}
+
+The preponderance of reads containing novel kmers fail to map uniquely to the reference genome, explaining why we should find such a massive discrepancy between the novel kmers we expect versus explain - no variants can be called on the unplaced reads.  That there should be so many reads that fail to map is perhaps not surprising, given the divergent nature of the reference genome to other samples.  Figure \ref{fig:ref_venn_HB3} shows the overlap between kmer sets between the 3D7 and HB3 genomes.  More than $20\%$ of the total set of kmers between these two samples is unique to each sample.
+
+These unique kmers are not simply repetitive, intergenic, or otherwise uninteresting kmers.  They often reflect interesting biology.  Figure \ref{fig:kmer_recovery} shows one example: three \textit{var} genes from 3D7's $60$-member antigenic repertoire.  These genes do not overlap with the HB3 repertoire.  One of the 3D7xHB3 progeny, has inherited one of the 3D7 \textit{var} genes in full, but curiously exhibits mosaic recovery of two others.  This is known to be an NAHR event between the telomeres of chromosomes $1$ and $2$, likely to have occured during mitosis, preserving the domain architecture and yielding a functional product\cite{Claessens:2014fo}.
+
+\begin{sidewaysfigure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{kmer_recovery}
+  \caption{Presence and absence of unique kmers in three 3D7 \textit{var} genes.  Each vertical line represents a kmer.  Colored kmers represent those unique 3D7 kmers that are recovered in the sample.  Grey indicates no recovery.  White indicates the kmer at that position was not unique in the 3D7 genome.  Only the coding regions of the respective genes are shown, with domain annotations obtained from the VarDom server\cite{Rask:2010fia}.}
+  \label{fig:kmer_recovery}
+\end{sidewaysfigure}
+
+\section{\textit{De novo} assembly as an alternative approach}
+
+Alignment methods require the haplotype of a sample to closely resemble that of the reference sequence.  Failing that requirement, reference-based variant callers have little recourse in recovering biologically interesting variation in genomic regions of high diversity.
+
+Theoretically, an assembly approach will have much greater sensitivity.  As it is unbiased towards the reference, we side-step the issues of the aligner failing to recognize complex genomic changes that may manifest in reads from a single locus being scattered across the genome.  Furthermore, a single assembly algorithm should be able to discover the full gamut of point, insertion, deletion, and structural mutation present in a genome, rather than having to rely on myriad algorithms with typically poor sensitivity to such events.  By restricting our processing of the assembly graphs to regions containing novel kmers, we should substantially reduce the number of potential false-positives while also providing a proxy for sensitivity, thus allowing us to determine how many regions of the graph need to be processed in order to achieve completeness of our callset.
+
+In this dissertation, we present and demonstrate a \textit{de novo} assembly approach to \textit{de novo} mutation detection and genotyping.  We demonstrate that this approaches yields vastly superior sensitivity and specificity, and can easily access events that occur on the haplotypic background of the non-reference parent.

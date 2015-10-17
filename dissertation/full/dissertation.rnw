@@ -1,4 +1,4 @@
-\documentclass[12pt]{ociamthesis}
+\documentclass[10pt, oneside]{ociamthesis}
 
 <<settings, include=FALSE>>=
 opts_chunk$set(concordance=TRUE, cache=TRUE);
@@ -12,6 +12,12 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{lscape}
+\usepackage{rotating}
+\usepackage[noend]{algpseudocode}
 \usepackage[font=scriptsize,labelfont=bf]{caption}
 \usepackage[superscript]{cite}
 \renewcommand{\citedash}{--}
@@ -39,7 +45,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
    \noindent\textsc{#1} % small caps text out
 }
 
-\graphicspath{{../motivation/figure/}{../genotyper/figure/}}
+\graphicspath{{../motivation/figure/}{../genotyper/figure/}{../simulation/figure/}}
 
 % =============
 % Configuration
@@ -69,6 +75,8 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \begin{romanpages}          % start roman page numbering
 \tableofcontents            % generate and include a table of contents
 \listoffigures              % generate and include a list of figures
+\listoftables               % generate and include a list of tables
+\listofalgorithms           % generate and include a list of algorithms
 \end{romanpages}            % end roman page numbering
 
 % ========
@@ -79,7 +87,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 %\include{conclusions}
 \input{../motivation/motivation.tex}
 \input{../background/background.tex}
-\input{../detection/detection.tex}
+\input{../simulation/simulation.tex}
 \input{../genotyper/genotyper.tex}
 \input{../pf/pf.tex}
 \input{../chimp/chimp.tex}
