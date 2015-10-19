@@ -15,7 +15,7 @@ Our algorithm, \texttt{IncorporateVariantsIntoGenome}, is described in Algorithm
 
 Note that we chose not to process each variant iteratively as insertions (deletions) would increase (decrease) the size of the array, altering the mapping between the VCF positions and the array positions.  Keeping track of the mapping in spite of the changes is cumbersome.  Instead, out scheme of placing all of the variants on the chromosome array first and then emitting the resulting sequence preserves the mapping.  We will revisit this strategy later on in this chapter when we introduce an algorithm to lift data over from the reference genome coordinates to a simulated genome's coordinates.
 
-Finally, note that this algorithm could fail to produce a correct FASTA file if there are multiple variants that overlap.  We are careful to avoid that scenario; we set our simulated variants to be placed no closer than $1000$ bp from one another.
+Algorithm \ref{alg:IncorporateVariantsIntoGenome} could fail to produce a correct FASTA file in the pathological case that there are multiple overlapping variants called at a single locus.  We are careful to avoid that scenario; we set our simulated variants to be placed no closer than $1000$ bp from one another.
 
 \begin{algorithm}
 \caption{Generate an alternative reference sequence based on a VCF file.}
@@ -40,6 +40,8 @@ Finally, note that this algorithm could fail to produce a correct FASTA file if 
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
+
+Many algorithms presented in this chapter rely on empirical distributions to model cross-over rates, read fragment size, indel lengths, and positional errors in reads.  In all cases, we use the inverse transform sampling method for pseudo-random number generation from an arbitrary probability distribution given its cumulative distribution function (CDF)\cite{Devroye:2013gi}.  Simply put, we compute the CDF for an empirical probability distribution, generate a random uniform deviate between $0$ and $1$ for the $x$ value, and interpolate the $y$ value from the CDF.
 
 \subsection{Parents}
 
@@ -157,18 +159,25 @@ These two VCFs were combined to produce a complete set of changes required to tr
 
 \section{Children}
 
-Generating the genomes of the children is slightly more involved, as there is much more biology to simulate, and many more considerations to be made when placing variants. We generated VCF descriptions of the children using a multi-stage pipeline that simulates (in order):
+Generating the genomes of the children is slightly more involved, as there is much more biology to simulate, and many more considerations to be made when placing variants. We generated VCF descriptions of the children using a multi-stage workflow shown in Figure \ref{fig:generatechildrenpipeline}.  In order, we simulate:
 
 \begin{enumerate}
-    \item homologous recombination between 3D7 and HB3
-    \item gene conversions
-    \item NAHR events between \textit{var} genes
+    \item homologous recombination between 3D7 and HB3 genomes
+    \item gene conversion events
+    \item NAHR events between compatible \textit{var} genes
     \item \textit{de novo} SNPs, insertions, deletions, and inversions
 \end{enumerate}
 
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{generatechildrenpipeline}
+  \caption{Workflow for generating children's genomes.  a. Generate chromosomes from the parental genomes (compatible \textit{var} genes shown in green and orange).  b. Recombine homologous chromosomes.  c. Add gene conversion events (by incorporating variants from the alternative haplotypic background over a limited genomic window).  d. Replace one of the \textit{var} genes with a chimera of compatible genes.  e. Add \textit{de novo} mutations.}
+  \label{fig:generatechildrenpipeline}
+\end{figure}
+
 \subsection{Homologous recombination}
 
-\subsubsection{Allelic}
+\subsubsection{Allelic homologous recombination}
 
 \begin{figure}[h!]
   \centering
@@ -177,12 +186,12 @@ Generating the genomes of the children is slightly more involved, as there is mu
   \label{fig:recomb-1}
 \end{figure}
 
-Recombination frequency will be dependent on the length of the chromosome. The empirical distributions were generated from the $75$ samples in the crosses data. These are plotted in Figure \ref{fig:recomb-1}. We simulated the number of recombination events per chromosome by drawing a random number from these distributions. The recombination sites themselves were chosen by drawing a uniform random variate between $1$ and the length of the chromosome. Although there are certainly hotspots and coldspots of recombination in the genome, we have ignored this complication.  An example haplotype mosaics for chromosome $12$ is found in Figure \ref{fig:haplotypes12}.
+For each bivalent chromosome, the cross-over rate will be dependent on the length of the chromosome. The empirical distributions for bivalent formation and crossover were generated from the $75$ samples in the MalariaGen crosses data. For each sample, only half of the chromosomes are expected to exhibit cross-over events.  The cross-over rates are plotted in Figure \ref{fig:recomb-1}. We simulated recombination in a sample by first drawing a binary number indicating whether a chromosome should be recombined, and if so, drawing the number of cross-over events per chromosome from these empirical distributions. The recombination sites themselves were chosen by drawing a uniform random variate between $1$ and the length of the chromosome. Although there are certainly hotspots and coldspots of recombination in the genome, we have ignored this complication.  An example haplotype mosaic of chromosome $12$ for five samples is shown in Figure \ref{fig:haplotypes12}.
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{haplotypes12}
-  \caption{Simulated haplotype mosaics for chromosome 12.}
+  \caption{Simulated haplotype mosaics for chromosome 12.  Genomic position is shown at the top of the figure, while variant number is shown at the bottom.  Each variant is depicted as a vertical grey line attached to the mosaic plot at the appropriate location.  In the mosaic, every variant is color-coded by parent of origin.}
   \label{fig:haplotypes12}
 \end{figure}
 
@@ -190,9 +199,9 @@ Recombination frequency will be dependent on the length of the chromosome. The e
 
 To simulate gene conversion events, we first chose a handful of random sites known to be variant in HB3, and determined the size of the event (number of adjacent HB3 variants involved in the gene conversion) by choosing a random uniform variate between $1$ and $3$. If these sites were originally transmitted to the child, they were removed from the VCF. If they had not been transmitted, they were added. The homologous recombinations and gene conversion events are displayed below for each chromosome and sample.
 
-\subsubsection{Non-allelic}
+\subsubsection{Non-allelic homologous recombination}
 
-NAHR events were generated by first finding compatible recombination partners. This list was generated by determining which 3D7 \textit{var} genes had been transmitted to the child, grouped by ups class and telomeric positioning ($5'$ or $3'$). In each group, two random genes were chosen. If necessary, the gene sequences were reverse complemented to have matching orientation. As NAHR events between two \textit{var} genes appear to occur in regions of homology, we identified shared $9$-mers, positioned between $20$ bp and $100$ bp between the two genes, to act as possible recombination sites. We selected between $2$ and $5$ random switches between the sequences and copied sequence data accordingly. Keeping in mind that our previous work has shown that the recombined \textit{var} genes are lost in order to produce the chimera, we added VCF records to delete the previous \textit{var} alleles from the child's genome and replace one of them with the recombined sequence.
+NAHR events were generated by first finding compatible recombination partners. This list was generated by determining which 3D7 \textit{var} genes had been transmitted to the child, grouped by upstream promoter class and telomeric positioning ($5'$ or $3'$). In each group, two random genes were chosen. If necessary, the gene sequences were reverse complemented to have matching orientation (note that the sequences may not have the same orientation in the simulated genomes themselves). As NAHR events between two \textit{var} genes appear to occur in regions of homology, we identified shared $9$-mers, positioned between $20$ bp and $100$ bp between the two genes, to act as possible recombination sites. We randomly selected between $2$ and $5$ of these positions to act as recombination breakpoints, switching between the sequences and copied sequence data accordingly. Keeping in mind that our previous work has shown that the recombined \textit{var} genes are lost in order to produce the chimera, we added VCF records to delete the previous \textit{var} alleles from the child's genome and replace one of them with the recombined sequence.
 
 \begin{figure}[h!]
   \centering
@@ -201,24 +210,26 @@ NAHR events were generated by first finding compatible recombination partners. T
   \label{fig:showrecomb-24}
 \end{figure}
 
-\subsection{SNPs and indels}
-
-To simulate de novo SNPs, we added $250$ sites with random (non-reference) alleles at random positions throughout the genome.  We also simulated $10$ insertion, deletion, and inversion events at every length between $1$ and $100$ bp. For insertions, random alleles were generated and tested to ensure they did not match the reference sequence. For deletions, we simply replaced the reference allele with a truncated allele of the prescribed length. For inversions, we replace the reference allele with its complement.
-
-\subsubsection{Expansion of short tandem repeats}
+\subsection{SNPs, insertions, and deletions}
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=\textwidth]{str_exp_and_con}
-  \caption{Expansion and contraction of short tandem repeats (STRs)}
-  \label{fig:str_exp_and_con}
+    \includegraphics[width=\textwidth]{variants}
+  \caption{Simulated variant types.  a. Original, parental haplotypic background upon which variants will be placed.  b. A single nucleotide polymorphism.  c. An insertion of two nucleotides.  d. A deletion of three nucleotides.  e. An inversion of four nucleotides.  f. Expansion of a $3$ bp short tandem repeat (STR) by one unit.  g. A contraction of an STR by one unit.  h. A tandem duplication of $11$ nucleotides.}
+  \label{fig:variants}
 \end{figure}
 
-As a special case of indels, we sought specifically to simulate the expansion and contraction of short tandem repeats (STRs), depicted in Figure \ref{fig:str_exp_and_con}. As these are constrained to occur at loci where there are already existing repeats, we first built a map of repeated $2$-bp, $3$-bp, $4$-bp, and $5$-bp sequences in the 3D7 genome. We filtered these lists, retaining only STRs where the repeated unit occurred at least three times. For each simulated event, we randomly chose a position from the appropriate list and select a number of units to add or remove. The number of units is constrained to be less than the length of the number of repeat units of the existing STR. With these considerations, we simulated $10$ expansions and $10$ contractions at the aforementioned repeat unit sizes.
+With the ground state genome now generated, we further generated simple events - SNPs, insertions, and deletions - on this foundation to complete the production of the child's genome.  The precise number of events can be specified by the user at runtime, and for each simulated genome, different counts were specified.
+
+To simulate \textit{de novo} SNPs, we added sites with random (non-reference) alleles at random positions throughout the genome.  We also simulated insertion, deletion, and inversion events at every length between $1$ and $100$ bp. For insertions, random alleles were generated and tested to ensure they did not match the allele already in the reference sequence. For deletions, we simply replaced the reference allele with a truncated allele of the prescribed length. For inversions, we replace the reference allele with its complement.
+
+\subsubsection{Expansion and contraction of short tandem repeats (STRs)}
+
+As a special case of indels, we sought specifically to simulate the expansion and contraction of short tandem repeats (STRs), depicted in Figure \ref{fig:variants}f-g. STRs are constrained to occur at loci where there are already existing repeats, and expansions (contractions) should manifest as the insertion (deletion) of whole units at a time.  We first built a map of repeated $2$-bp, $3$-bp, $4$-bp, and $5$-bp sequences in the 3D7 genome. We filtered these lists, retaining only STRs where the repeated unit occurred at least three times. For each simulated event, we randomly chose a position from the appropriate list and select a number of units to add or remove. The number of units is constrained to be less than the length of the number of repeat units of the existing STR. With these considerations, we simulated expansions and contractions at the aforementioned repeat unit sizes.
 
 \subsubsection{Tandem duplications}
 
-For tandem duplications, we simulated $10$ events at each length between $10$ bp and $50$ bp by selecting sequences randomly from the genome and inserted an identical copy at the same locus.
+For tandem duplications (as depicted in Figure \ref{fig:variants}h) of length $l$, we chose positions in the genome at random, copied the next $l$ bases, and inserted an identical copy at the same locus.  Events at each length between $10$ bp and $50$ bp were produced.
 
 \section{Simulating reads}
 
@@ -240,13 +251,20 @@ Our approach is detailed below.  Briefly, it consists of three components:
 
 \subsection{Constructing the coverage profile}
 
-Construction of a coverage profile consists of two sub-problems: providing a complete description of where reads fall on the existing reference sequence, and tranferring that information sensibly to the modified reference sequence.  We address each of these needs with custom tools.
+Construction of a coverage profile consists of two sub-problems: providing a complete description of where reads fall on the existing reference sequence, and transferring that information sensibly to the modified reference sequence.  This is depicted in Figure \ref{fig:coverageprofile}.  We address each of these needs with custom tools.
 
-\subsubsection{ComputeBaseAndFragmentErrorRates}
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{coverageprofile}
+  \caption{Construction of the coverage profile for the reference genome and liftover to the altered genome.  Each read start (and fragment start, not shown) is stored along with a count of the number of reads at that location that contain errors.  This information is then lifted over to the simulated sequence, and gaps in the table are filled in with neighboring values.}
+  \label{fig:coverageprofile}
+\end{figure}
 
-The ComputeBaseAndFragmentErrorRates tool provides a precise specification for the number of fragments and reads found starting at of every position in the canonical reference genome, as well as an accounting as to which reads and fragments contained any kind of error (mismatch or indels).  Briefly, we iterate over every chromosome in the reference genome, advancing through every aligned read stored in an exemplar sample's BAM file.  We instantiate a chromosome-length array indicating the number of reads that start at a given position and the number of reads that contain apparent errors (any discrepancy from the reference sequence).
+\subsubsection{Computing read and fragment starts, and error rates}
 
-We must also store information about read fragment starts and error rates, requiring us to keep track of read pairs as we traverse the BAM file.  To do so, we hash the read name to the first instance of the read we see along the length of a chromosome.  As paired-end reads have the same name, the second time we see the same read name, we will have found the second end of the pair.  We then increment the count at the chromosome array position that corresponds to the $5'$-most end of the pair, and increment the fragment errors array based on errors in either end of the pair.
+We developed a tool, \texttt{ComputeBaseAndFragmentErrorRates}, which provides a precise specification for the number of fragments and reads found starting at of every position in the canonical reference genome, as well as an accounting as to which reads and fragments contained any kind of error (mismatch or indels).  Briefly, we iterate over every chromosome in the reference genome, advancing through every aligned read stored in an exemplar sample's coordinate-sorted BAM file.  We instantiate a chromosome-length array indicating the number of reads that start at a given position and the number of reads that contain apparent errors (any discrepancy from the reference sequence).
+
+We must also store information about read fragment starts and error rates, which requires us to keep track of read pairs as we traverse the BAM file.  To do so, we hash the read name to the first instance of the read we see along the length of a chromosome.  As paired-end reads have the same name, the second time we see the same read name, we will have found the second end of the pair.  We then increment the count at the chromosome array position that corresponds to the $5'$-most end of the pair, and increment the fragment errors array based on errors in either end of the pair.
 
 This algorithm is described in Algorithm \ref{alg:ComputeBaseAndFragmentErrorRates}.
 
@@ -255,55 +273,74 @@ This algorithm is described in Algorithm \ref{alg:ComputeBaseAndFragmentErrorRat
 \label{alg:ComputeBaseAndFragmentErrorRates}
 \begin{algorithmic}[1]
 \Function{ComputeBaseAndFragmentErrorRates}{BAM}
-    \For{$\textit{chr} \textrm{ in } \textit{chrs}$}
-        \State $\textit{numReadsWithErrors} \gets []$
-        \State $\textit{numReads} \gets []$
-        \State $\textit{numFragmentsWithErrors} \gets []$
-        \State $\textit{numFragments} \gets []$
+    \ForAll{$\textit{chr} \textrm{ in } \textit{chrs}$}
+        \State $\textit{nReadsErrors} \gets []$
+        \State $\textit{nReads} \gets []$
+        \State $\textit{nFragmentsErrors} \gets []$
+        \State $\textit{nFragments} \gets []$
         \State $\textit{seenReads} \gets []$
 
         \State $\textit{reads} \gets \textit{BAM.getAllReads(chr)}$
 
-        \For{$\textit{read} \textrm{ in } \textit{reads}$}
-            \State $\textit{readErrorPositions} \gets \textit{getPositionsWithErrors(read)}$
+        \ForAll{$\textit{read} \textrm{ in } \textit{reads}$}
+            \State $\textit{readErrorPositions} \gets \textit{getPositionsErrors(read)}$
             \State $\textit{refErrorPositions} \gets \textit{convertReadPositionsToReferencePositions(readErrorPositions)}$
 
-            \For{$\textit{refErrorPosition} \textrm{ in } \textit{refErrorPositions}$}
-                \State $\textit{numReadsWithErrors[refErrorPosition]}++$
+            \ForAll{$\textit{refErrorPosition} \textrm{ in } \textit{refErrorPositions}$}
+                \State $\textit{nReadsErrors[refErrorPosition]}++$
             \EndFor
 
-            \For{$\textit{readPosition} \textrm{ in } 1:\textit{read.length()}$}
-                \State $\textit{numReads[convertReadPositionsToReferencePositions(readPosition)]}++$
+            \For{$\textit{readPosition} \textrm{ in } 0:\textit{read.length()}$}
+                \State $\textit{nReads[convertReadPositionsToReferencePositions(readPosition)]}++$
             \EndFor
 
             \If{$\textit{!seenReads.contains(read.getName())}$}
                 \State $\textit{seenReads} \gets \textit{read.getName()}$
             \Else
-                \State $\textit{mateErrorPositions} \gets \textit{getPositionsWithErrors(seenReads[read.getName()])}$
+                \State $\textit{mateErrorPositions} \gets \textit{getPositionsErrors(seenReads[read.getName()])}$
 
                 \If $\textit{readErrorPositions.size()} + \textit{mateErrorPositions.size()} \ge 1$
-                    \State $\textit{numFragmentsWithErrors[seenReads[read.getName()].getAlignmentStart()}++$  
+                    \State $\textit{nFragmentsErrors[seenReads[read.getName()].getAlignmentStart()}++$  
                 \EndIf
 
-                \State $\textit{numFragments[seenReads[read.getName()]}++$  
+                \State $\textit{nFragments[seenReads[read.getName()]}++$  
             \EndIf
         \EndFor
 
-        \For{$\textit{pos} \textrm{ in } 1:\textit{numReads.length()}$}
-            \State $\textit{print chr, pos, numReadsWithErrors[pos], numReads[pos], numFragmentsWithErrors[pos], numFragments[pos]}$
+        \For{$\textit{pos} \textrm{ in } 0:\textit{nReads.length()}$}
+            \State $\textit{print chr, pos, nReadsErrors[pos], nReads[pos], nFragmentsErrors[pos], nFragments[pos]}$
         \EndFor
     \EndFor
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{LiftoverFromRefToChild}
+\subsubsection{Lifting read profile over from reference to simulated genome}
 
-The genomic coordinates present in the table produced by Algorithm \ref{alg:ComputeBaseAndFragmentErrorRates} must be transformed from the reference sequence to the simulated genome before it can be used.  To do so, we developed a tool that could liftover the coordinates appropriately when given the table, reference sequence, and a VCF file describing the alterations made to the reference to transform it into the simulated genome.  This is accomplished as follows: we first iterate through each chromosome and store the entire sequence as an array of strings.  Each string is of variable length, and at this stage of the construction, all stored strings are of length $1$: the length of the reference allele present at that location.  At positions where a variant is present, we make alterations to the array.  We first replace reference nucleotide strings with zero-length strings up to the length of the reference allele.  We then set the string at the variant position to the alternate allele indicated in the VCF file.  Thus, we are able to handle SNPs (one reference base blanked out, then replaced with one alternate base), insertions (one base blanked out, many replaced), deletions (many bases blanked out, one replaced), and MNPs (many bases blanked out, many replaced).  When all of the strings are concatenated together, the new chromosome is constructed.
+The genomic coordinates present in the table produced by Algorithm \ref{alg:ComputeBaseAndFragmentErrorRates} must be transformed from the reference sequence to the simulated genome before it can be used.  To do so, we developed a tool that could liftover the coordinates appropriately when given the table, reference sequence, and a VCF file describing the alterations made to the reference to transform it into the simulated genome.  This is accomplished with an algorithm similar to Algorithm \ref{alg:IncorporateVariantsIntoGenome}.  We iterate through each chromosome as we did before, storing the entire sequence as an array of strings, placing alternate alleles in the place of reference alleles, or in the case of deletions, replacing reference alleles with blank strings.  Once the array is populated, we advance through the coverage table one position at a time.  At each position, we emit the contents of the previously constructed table with the number of reads, fragments, and errors for each.  At some positions, insertions will have changed the length of the sequence in the bin, and the extra positions will not have explicit read and fragment information to emit.  To account for this, we keep running statistics on previously seen read and fragment statistics from which we can compute running means and standard deviation.  We generate new values for the number of reads, fragments, and error rates as necessary as the mean plus standard deviation of the relevant metric, ensuring the values are never less than $0$, and that we round up or down to the nearest integer (error rates are rounded up and read/fragment counts are rounded down to increase our self-penalty).
 
-Once the chromosome is generated, we advance through the sequence one position at a time.  At each position, we emit the contents of the previously constructed table with the number of reads, fragments, and errors for each.  At some positions, the presence of variants will have modified the underlying sequence such that new positions do not have explicit read and fragment information to lift over.  To account for this, we keep running statistics on previously seen read and fragment statistics from which we can compute running means and standard deviation.  We generate new values for the number of reads, fragments, and error rates as necessary as the mean plus standard deviation of the relevant metric, ensuring the values are never less than $0$, and that we round up or down to the nearest integer (error rates are rounded up and read/fragment counts are rounded down to increase our self-penalty).
+This algorithm is described in \ref{alg:LiftoverFromRefToChild}.
 
-This algorithm is described in \ref{alg:LiftoverFromRefToChild}.  
+\begin{algorithm}
+\caption{Lift a table from reference to child coordinates.}
+\label{alg:LiftoverFromRefToChild}
+\begin{algorithmic}[1]
+\Function{LiftoverFromRefToChild}{ref, vcf, table}
+    \ForAll{$\textit{chr} \textrm{ in } \textit{ref}$}
+        \State $\textit{newchr} = \textit{IncorporateVariantsIntoGenome(ref, vcf)}$
+
+        \For{$i \textrm{ in } 0:newchr.length()$}
+            \State $\textit{emit(table[i])}$
+            \If{$newchr[i].length() > 1$}
+                \For{$j \textrm{ in } 1:newchr[i].length()$}
+                    \State $\textit{emit(extrapolate(table[i]))}$
+                \EndFor
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Constructing the read profile}
 
@@ -317,13 +354,33 @@ We first store the following scalar information (as the data we are modelling is
     \item number of reads
     \item number of reads with errors
     \item number of read pairs
-    \item number of chimeric pairs (paired-end reads with one end aligned to a different chromosome than the other)
+    \item number of chimeric pairs (each end aligned to different chromosomes)
     \item number of mismatches 
     \item number of insertions
     \item number of deletions
 \end{enumerate}
 
-Note that some of the mismatches, insertions, and deletions may represent true variation between the sample and the reference sequence.  We do not mask these sites out.  While this increases the apparent error rate, the variant rates are typically low compared to the number of bases in the reference sequence itself, making the difference negligible.  Furthermore, we will choose the reference sample as the exemplar dataset for the read simulations.  Since this sample should theoretically be identical to the reference sequence, this choice obviates the need for any masking of variants in the reference sample against the reference sequence.
+Example values for each of these metrics can be found in Table \ref{tbl:scalarvalues}.  Note that some of the mismatches, insertions, and deletions may represent true variation between the sample and the reference sequence.  We do not mask these sites out.  While this increases the apparent error rate, the variant rates are typically low compared to the number of bases in the reference sequence itself, making the difference negligible.  Furthermore, we will choose the reference sample as the exemplar dataset for the read simulations.  Since this sample should theoretically be identical to the reference sequence, this choice obviates the need for any masking of variants in the reference sample against the reference sequence.
+
+\begin{table}[]
+\centering
+\caption{Example read and fragment scalar properties for sample PG0063-C.}
+\label{tbl:scalarvalues}
+\begin{tabular}{@{}lr@{}}
+\toprule
+                   & PG0051-C\\
+\midrule
+readLength         & 76\\
+numReads           & 38,846,418\\
+numReadsWithErrors & 3,696,708\\
+numPairs           & 19,473,634\\
+numChimericPairs   & 348,294\\
+numMismatches      & 6,525,504\\
+numInsertions      & 139,941\\
+numDeletions       & 317,076\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsubsection{Empirical distributions}
 
@@ -336,7 +393,14 @@ Other properties take on a range of values with some probability.  Rather than t
     \item deletion size
 \end{enumerate}
 
-Note that these distributions are not conditioned on position in the read.
+Note that these distributions are not conditioned on position in the read.  Example distributions derived from an exemplar sample are shown in Figure \ref{fig:empDists-1}.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{empDists-1}
+  \caption{Top: empirical fragment size distribution for PG0051-C.  Bottom: empirical deletion (negative values) and insertion (positive values) length distribution for the same sample.}
+  \label{fig:empDists-1}
+\end{figure}
 
 \subsubsection{Covariate table}
 
@@ -351,8 +415,51 @@ Finally, we construct the covariate table: a set of empirical distributions for 
     \item first base of error sequence (empty for deletions)
 \end{enumerate}
 
-For each read, we increment an element in a table that corresponds to these six covariates.  The code to do so is contained in our GenerateReadSimProfile module.
+For each read, we increment an element in a table that corresponds to these six covariates.  The code to do so is contained in our \texttt{GenerateReadSimProfile} module.
 
 \subsection{The read simulator}
 
-With the coverage and read profiles in hand, we are finally ready to simulate reads.  We advance through each base of the simulated genome, reading the coverage profile as we traverse.  At each site, we use the coverage profile to dictate the number of fragments that must be generated and how many of those fragments should contain errors.  We then 
+With the coverage and read profiles in hand, we are finally ready to simulate reads.  We advance through each base of the simulated genome, reading the coverage profile as we traverse.  At each site, we use the coverage profile to dictate the number of fragments that must be generated and how many of those fragments should contain errors, thus modelling regions of the genome with higher or lower error rates.  We then generate fragments, sampling fragment lengths from the empirical fragment length distribution.  If a read is to contain an error, as specified by the coverage profile, we construct a read-specific error profile for mismatches, insertions, and deletions.  These profiles take into account the preceeding dinucleotide context for each position in the read\footnote{To handle the first and second positions in the read, which do not have a dinucleotide context, we simply extract a read by starting two nucleotides into the simulated fragment.}, the end of the pair being simulated, whether the fragment came from the positive or negative strand, and the first nucleotide of the error to be incorporated (not applicable for deletions).  
+
+\begin{sidewaysfigure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{simreads}
+  \caption{Read datasets for real (top panel), simulated perfect (middle panel), and simulated realistic (bottom panel) data.}
+  \label{fig:simreads}
+\end{sidewaysfigure}
+
+\section{The simulated dataset}
+
+With our genome and read simulation framework now complete, we simulated the genomes of $20$ progeny from a pseudo 3D7xHB3 cross.  The precise counts of variant types per sample are shown in Table \ref{tb:simstats}.  For each sample, we generated two datasets: a so-called "perfect" dataset (uniform coverage, perfect reads), and a so-called "realistic" dataset (non-uniform coverage, imperfect reads).  Both datasets contain approximately $150x$ coverage.
+
+\begin{table}[]
+\centering
+\caption{\textit{De novo} variant counts for each of the $20$ simulated children.}
+\label{tb:simstats}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+  & DEL & GC & INS & INV & NAHR & RECOMB & SNP & STR\_CON & STR\_EXP & TD\\
+\midrule
+0 & 22 & 25 & 22 & 22 & 2 & 10 & 5 & 3 & 3 & 26\\
+1 & 21 & 21 & 21 & 21 & 2 & 10 & 23 & 11 & 11 & 26\\
+2 & 11 & 22 & 11 & 11 & 2 & 8 & 13 & 22 & 22 & 8\\
+3 & 25 & 17 & 25 & 25 & 2 & 32 & 23 & 17 & 17 & 21\\
+4 & 4 & 23 & 4 & 4 & 2 & 8 & 14 & 16 & 16 & 12\\
+5 & 26 & 23 & 26 & 26 & 2 & 37 & 28 & 5 & 5 & 8\\
+6 & 13 & 17 & 13 & 13 & 2 & 15 & 27 & 23 & 23 & 4\\
+7 & 1 & 22 & 1 & 1 & 2 & 30 & 28 & 5 & 5 & 12\\
+8 & 26 & 16 & 26 & 26 & 2 & 16 & 16 & 13 & 13 & 8\\
+9 & 4 & 23 & 4 & 4 & 2 & 25 & 23 & 23 & 23 & 21\\
+10 & 12 & 20 & 12 & 12 & 2 & 16 & 23 & 19 & 19 & 27\\
+11 & 13 & 19 & 13 & 13 & 2 & 7 & 20 & 18 & 18 & 17\\
+12 & 19 & 20 & 19 & 19 & 2 & 8 & 14 & 5 & 5 & 28\\
+13 & 10 & 20 & 10 & 10 & 2 & 25 & 13 & 28 & 28 & 11\\
+14 & 28 & 18 & 28 & 28 & 2 & 8 & 3 & 29 & 29 & 17\\
+15 & 27 & 22 & 27 & 27 & 2 & 30 & 5 & 19 & 19 & 2\\
+16 & 23 & 22 & 23 & 23 & 2 & 12 & 29 & 24 & 24 & 17\\
+17 & 17 & 22 & 17 & 17 & 1 & 10 & 28 & 13 & 13 & 11\\
+18 & 23 & 18 & 23 & 23 & 2 & 8 & 1 & 21 & 21 & 18\\
+19 & 22 & 22 & 22 & 22 & 2 & 17 & 19 & 3 & 3 & 2\\
+\bottomrule
+\end{tabular}
+\end{table}
