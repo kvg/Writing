@@ -1,4 +1,4 @@
-\documentclass[10pt, oneside]{ociamthesis}
+\documentclass[10pt, twoside, openright]{ociamthesis}
 
 <<settings, include=FALSE>>=
 opts_chunk$set(concordance=TRUE, cache=TRUE);
@@ -45,7 +45,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
    \noindent\textsc{#1} % small caps text out
 }
 
-\graphicspath{{../motivation/figure/}{../genotyper/figure/}{../simulation/figure/}}
+\graphicspath{{../motivation/figure/}{../detection/figure/}{../simulation/figure/}}
 
 % =============
 % Configuration
@@ -88,7 +88,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \input{../motivation/motivation.tex}
 \input{../background/background.tex}
 \input{../simulation/simulation.tex}
-\input{../genotyper/genotyper.tex}
+\input{../detection/detection.tex}
 \input{../pf/pf.tex}
 \input{../chimp/chimp.tex}
 \input{../discussion/discussion.tex}
