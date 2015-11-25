@@ -1,4 +1,4 @@
-\documentclass[10pt, twoside, openright]{ociamthesis}
+\documentclass[11pt, twoside, openright]{ociamthesis}
 
 <<settings, include=FALSE>>=
 opts_chunk$set(concordance=TRUE, cache=TRUE);
@@ -20,7 +20,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \usepackage{mathrsfs}
 \usepackage{stmaryrd}
 \usepackage[noend]{algpseudocode}
-\usepackage[font=scriptsize,labelfont=bf]{caption}
+\usepackage[font=normal,labelfont=bf]{caption}
 \usepackage[superscript]{cite}
 \renewcommand{\citedash}{--}
 

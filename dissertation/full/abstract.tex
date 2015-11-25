@@ -2,12 +2,4 @@
 
 In high-diversity populations, a complete accounting of \textit{de novo} mutations can be difficult to obtain.  Most analyses involve alignment of genomic reads to a reference genome, but if the haplotypic background upon which a mutation occurs is absent, events can be easily missed (as reads have nowhere to align) and false-positives may abound (as the aligner forces the reads to align elsewhere).  In this thesis, I describe methods for \textit{de novo} mutation discovery and genotyping based on a so-called "pedigree graph" - a de Bruijn graph where all available sequencing data (trusted and untrusted data alike) is represented.  I constrain genotyping efforts to locations containing "novel kmers" - sequence present in the child but absent from the parents.  I then apply Dijkstra's shortest path algorithm to perform the genotyping, even in the presence of sequencing error.  In simulation, this approach provides a vastly more sensitive and specific set of \textit{de novo} variants than traditional methods.
 
-In Chapter 1, I use part of a real dataset, progeny from the crossing of two \textit{Plasmodium falciparum} parasites, to demonstrate the pitfalls of the reference-based approach.  I also introduce de Bruijn graphs for genome assembly.
-
-In Chapter 2, I present a review on mutational mechanisms that generate \textit{de novo} mutations, their rates, factors that influence their generation, and known events in various species.
-
-Chapters 3 and 4 detail the software packages I have written for this work, the former including descriptions of the realistic variant read simulations, the latter detailing the graph genotyping algorithm.  Results from the application of the algorithm to the complete \textit{P. falciparum} dataset are presented in Chapter 5.
-
-Finally, Chapter 6 discusses the work in a larger context and details various improvements that can be made in future work.
-
 \end{abstract}
