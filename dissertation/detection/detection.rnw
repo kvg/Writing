@@ -1,42 +1,138 @@
 \chapter{Detection and classification}
 \label{ch:methods}
 
-\newthought{We now present a novel graphical method} for detecting and classifiying \textit{de novo} variants.  We shall briefly present the workings of the algorithms, relying on the \textit{de novo} assembly foundational material presented in Chapter \ref{ch:motivation}.  The simulation framework and dataset we described in Chapter \ref{ch:simulation} will be used to establish the method's accuracy.
+\newthought{We now present a novel graphical method} for detecting and classifiying \textit{de novo} variants.  We shall present some brief foundational background on \textit{de novo} assembly, upon which the variant caller is built.  The simulation framework and dataset we described in Chapter \ref{ch:simulation} will be used to establish the method's accuracy.
+
+Reference-based analyses benefit from being reasonably intuitive, as the underlying genome is linear and there are many visualization tools that can facilitate the user's understanding of the underlying data\cite{Li:2009p181,Bao:2009ie,Robinson:2011gy,Milne:2013gf,Thorvaldsdottir:2013iw}.  In contrast, graph data structures are less intuitive and lack dedicated tools for visualization.  In this chapter, we will also present images from our purpose-built trio graph visualization software for the purposes of guiding the reader's intuition regarding graphical variant motifs and the operation of the calling algorithms.
+
+\section{\textit{De novo} assembly}
+
+\textit{De novo} assembly refers to the process wherein a sampled genome is reconstructed from sequencing data without guidance from an existing genome.  Sequenced deeply enough, a set of reads from a single sample will contain overlaps that can be used to infer the sequence of contiguous segments of the genome into so-called \textbf{contigs}.  If the reads are long enough to span repetitive regions in the genome, these contigs could be as long as the chromosome itself.  Otherwise, separate contigs can be joined together into \textbf{scaffolds} (contigs plus gaps) using paired-end reads, information from linkage analysis, HAPPY mapping, and other methods.
+
+The quality of the reconstruction can vary considerably depending on how the assembly is performed.  Typically, constructing a complete and high-quality reference sequence (one with few errors and few gaps in the linear sequence of each assembled chromosome) is a big first step to studying the genome of an organism, done at great expense and labor over a period of several years.  In 2002, after several years of work, Gardner \textit{et al.} published the sequence of the 3D7 \textit{P. falciparum} parasite clone.  By using a whole chromosome shotgun strategy with accurate and long (several hundred bp) first-generation sequencing reads (Sanger), each chromosome was fully resolved with very few gaps in the sequence and no unplaced contigs\cite{Gardner:2002p1564}.
+
+Today, the same sample can be assembled in a matter of days rather than years using high-throughput second-generation sequencing.  Short reads ($76-100$ bp) from second-generation sequencers (Illumina) can be produced cheaply and in abundant quantities, and similar read overlap considerations can be used to generate assemblies.  However, these reads tend to be much more error prone, and the shorter read length fails to span many repetitive regions of the genome.  The result is a much cheaper, but far more fragmented assembly than the reference assembly.  Table \ref{tbl:asmcompare} compares the assembly statistics of the reference genome versus a reconstruction of the same sample from Illumina data taken from our cross dataset (PG0051-C) using the McCortex assembly software\cite{Turner:2015ve}.  While the parasite genome is known to have $16$ chromosomes (which the reference recapitulates), the Illumina assembly broken into over $50,000$ pieces with an N50\footnote{\textbf{N50}: the length for which the set of all contigs that length or greater represents half the total lengths of all contigs.} of a mere $1,280$ bp.
+
+\begin{table}[]
+\centering
+\caption{Comparison of assembly statistics of the finished 3D7 reference genome and a reconstruction of the same sample from $76$-bp Illumina data.}
+\label{tbl:asmcompare}
+\begin{tabular}{@{}lllllll@{}}
+\toprule
+          & contigs & min length & max length & mean length & N50     & total sequence \\ \midrule
+3D7       & 16      & 5967       & 3291936    & 1458302     & 1687656 & 23332831       \\
+PG0051-C  & 51425   & 47         & 27520      & 478         & 1280    & 24602599       \\ \bottomrule
+\end{tabular}
+\end{table}
+
+It is perhaps surprising then to discover the central argument of this dissertation is on the value of \textit{de novo} assembly of short reads for \textit{de novo} mutation discovery.  After all, a poor-quality Illumina assembly - as evidenced by the numerous short contigs - would seem to be very limiting, even if it could theoretically reconstruct pieces of the genome that cannot be recovered from a reference-based analysis.  However, for the work that we describe in this chapter, the value is not in the contig reconstructions, but in the underlying data structure from which the contigs are produced: the "de Bruijn graph".
+
+The de Bruijn graph is a data structure that encodes read overlaps such that a walk through the vertices with unambiguous connections yields contiguous sequence in the genome.  In real data, those walks may end prematurely due to errors or homology, yielding junctions that cannot be confidently navigated.  Typically, assembly algorithms will be conservative in the contigs they emit from this data, choosing to terminate the walk at the junction rather than risk going forward and emitting sequence that does not actually appear in the genome.  However, with an additional set of metadata and a reasonable assumption, we can traverse the barrier.  In trio data, it is easy to detect a so-called novel kmer: a kmer occuring in the child but absent in the parents.  By annotating the graph with this information, we can see stretches of novel kmers.  Figure \ref{fig:graphwithextras} shows a portion of such an annotated graph.  Ignoring the annotations, a traversal that starts at vertex $D$ would yield a short contig: $C \rightarrow D \rightarrow E$.  However, if we assume the novel kmers link together, we can extend our traversal to yield $C \rightarrow D \rightarrow E \rightarrow F \rightarrow G \rightarrow H$.  These novel kmers are the hallmark of \textit{de novo} variation, and by utilizing these annotations, we can navigate parts of the graph that are otherwise unnavigable, surpassing what conservative contigs can give us and providing tremendous sensitivity and specificity to DNMs.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.8\textwidth]{graphwithextras}
+  \caption{Graph with novel kmer annotations in red.}
+  \label{fig:graphwithextras}
+\end{figure}
+
+\subsection{Definitions}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.5\textwidth]{examplegraph}
+  \caption{An example directed graph with six vertices.}
+  \label{fig:examplegraph}
+\end{figure}
+
+First, we provide some definitions.  We denote a \textbf{graph} as $G = \{\mathcal{V}, \mathcal{E}\}$ where $\mathcal{V}$ represents a unique set of \textbf{vertices}, and $\mathcal{E}$ a set of \textbf{edges}\cite{Koller:2009ty}.  We shall assume the set of vertices $\mathcal{V} = V_1, V_2, ..., V_n$.  A pair of vertices may be connected by an edge.  For the purposes of this dissertation, we shall require that all edges are \textbf{directed} (though for some applications outside this work, it is also possible for edges to be \textbf{undirected}).  Written as $V_i \rightarrow V_j$ (or equivalently $V_i \leftarrow V_j$ and $V_j \rightarrow V_i$), directed edges restrict graph traversal in one direction (thus enforcing a traversal order when reconstructing a region of the genome).  A vertex may have a number of incoming (outgoing) edges, the precise count being referred to as a vertex's \textbf{in- (out-) degree}.  We shall also refer to any vertex with an in-degree or out-degree greater than $1$ as a \textbf{junction}.
+
+A \textbf{path} is a sequence of adjacent vertices that respects these edge relationships, i.e. $V_i, ..., V_k$ such that for every $j = i, ..., k$, we have $V_j \rightarrow V_{j+1}$.  In Figure \ref{fig:examplegraph}, the vertex sequence $A, B, C, F$ forms a path.  Similarly, a \textbf{trail} denotes a sequence of adjacent vertices, but does not respect the directionality of the edges.  In Figure \ref{fig:examplegraph}, the sequence $F, E, D, A$ forms a trail.  Edges can optionally carry \textbf{weight}, indicating an arbitrary cost for traversing from one vertex to another via particular edges.  Unless otherwise specified, we shall assume the edge weight is always $1$.
+
+A \textbf{multi-color graph} is a useful extension for multi-sample scenarios.  Each edge carries additional metadata used to denote sample identity (e.g. each sample is assigned a unique "color").  All kmers in all samples are added to the graph, and following the edges with the same color yields the genome of that sample.  Many kmers will not be accessible when traversing paths or trails in one color versus another.  These motifs are the hallmark of most variation in a graphical setting.
+
+Often in this dissertation, we will perform operations on a limited graph region wherein we process only vertices of interest and all edges present between them in the original graph.  This is referred to as an \textbf{induced subgraph} (which is \textit{not} technically synonymous with a subgraph, but for simplicity in this work, we will often drop the "induced" qualifier).  Let $\mathbf{V} \subset \mathcal{V}$.  The \textbf{subgraph} $G[\mathbf{V}] = \{\mathbf{V}, \mathcal{E'}\}$ where $\mathcal{E'}$ are all the edges $V_i \rightleftharpoons V_j \in \mathcal{E}$ such that $V_i, V_j \in \mathbf{V}$.
+
+A \textbf{de Bruijn} graph represents fixed length symbols (vertices) and their overlaps (edges), with the added restriction that each symbol may only appear once in the graph\cite{Bruijn:1946va}.  Applied to assembly, each symbol is taken to be a genomic sequence of length $k$ (or \textbf{kmer}), with edges connecting vertices overlapping by $k-1$ bases\footnote{According to the original mathematical definition, a de Bruijn graph should represent \textit{every} possible symbol of length $k$, which makes the assembly formulation a subgraph rather than a graph.  However, none of the relevant literature refers to assembly graphs in this manner, so we shall carry on abusing the term.}.
+
+To construct the initial graph, each sequenced read is broken up into $l-k+1$ kmers (where $l$ is the read length) and added to the graph as vertices, with edges being placed between adjacent kmers.  Overlapping reads should share kmers, and the adjacency information stored in the graph can be updated accordingly.  Thus processing one read at a time in this manner will yield a graph of overlaps for the entire dataset.
+
+We rely on the Cortex assembly software for construction of the graph.  Cortex represents the graph on disk as fixed-width records (herein referred to as \textbf{CortexRecords}) consisting of a \textbf{CortexKmer} (defined as a odd-length kmer or its reverse complement, whichever is alphanumerically lower), coverage in each color, and a list of incoming and outgoing edges.  The edge lists utilize a minimalist description.  For incoming edges, only the first base of the preceeding kmer is stored; the rest of the kmer is assumed to be the $0$ to $k-1$ substring of the current kmer.  Likewise, for outgoing edges, the subsequent kmer is assumed to be the $1$ to $k$ substring of the current kmer plus the last base of the next kmer.  Figure \ref{fig:cortexrecords} lists three example records.  In the first record, the specified kmer has coverage $9$ in color $0$ (for our purposes, the child), $8$ in color $1$ (mother), and $5$ in color $2$ (father).  The trailing three columns encode edge information per color.  The first four characters of each column denote incoming edges to kmers with A, C, G, or T prefixes (or "." for no edge to that prefix).  The last four characters of each column denote outing edges to kmers with A, C, G, or T suffixes (or "." for no edge to that suffix).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{cortexrecords}
+  \caption{Example CortexRecord entries.}
+  \label{fig:cortexrecords}
+\end{figure}
+
+The Cortex de Bruijn graph can be easily represented as a hash table where each key is a CortexKmer and the associated value a list of incoming and outgoing edges.  This enables lookups to be performed in $\mathcal{O}(1)$ time, but requires the entire graph be loaded into memory.  While this makes sense from the perspective of a software developer writing assembly software (where one would assume that every kmer will be processed during the lifetime of the program's execution), it is cumbersome for our purposes.  DNMs are anticipated to be scant, which implies that the number of kmers that need to be examined is modest.  Furthermore, should we wish to scale to larger genomes in the future (e.g. the $3$ gigabase chimpanzee genome), we must be aware of the much greater difficulty in loading such a graph entirely into memory (unless one happens to be operating on a computer with several hundred gigabytes of available RAM).  Instead, we sort the Cortex graphs and perform a binary search whenever we need to load the CortexRecord associated with a particular CortexKmer.  This increases the time complexity for kmer lookups to $\mathcal{O}(\log{}n)$, but eliminates the need to load the entire graph to memory.
+
+We define a series of utility functions that aid graph traversal.  The \textbf{\texttt{findRecord}} method retrieves the CortexRecord indexed by a kmer via a binary search over the sorted disk-based graph, or throws an error if the graph is not sorted.  The CortexKmer within the CortexRecord, in addition to carrying the text of the kmer, also stores a bit that indicates whether the stored orientation matches the requested orientation, which is useful for navigation.  The methods \textbf{\texttt{getPrevKmers}} and \textbf{\texttt{getNextKmers}} retrieve lists of kmers connected to incoming and outgoing edges of the specified kmer, orientation-matched to the kmer \texttt{sk}.
+
+Many methods will accept two graphs rather than just one: a \textbf{clean} graph and a \textbf{dirty} graph.  The clean graph represents data where errors have been removed by the assembly software's automatic filtering process (coverage and contig length considerations).  The dirty graph represents data prior to this cleaning step.  When a kmer is absent from the clean graph or lacks incoming/outgoing edges, traversal can still continue if the dirty graph contains the requested kmer and edge information.  This overcomes an issue wherein \textit{overcleaned} data (data filtered with too stringent a threshold) causes erroneous gaps in the graph.  If carefully used, the dirty graph can be used to patch these holes without causing significant errors in the traversal.  Almost all methods with this double graph signature have a form that look like Algorithm \ref{alg:doublegraph}, wherein a single graph version of the same method is called, only to be called again if the operation on the clean graph was unsuccessful. 
+
+\begin{algorithm}
+\caption{Get next kmers from the clean graph, failing back to the dirty graph}
+\label{alg:doublegraph}
+\begin{algorithmic}[1]
+\Function{getNextKmers}{clean, dirty, kmer, color}
+    \State nextKmers = getNextKmers(clean, kmer, color)
+
+    \If{(dirty != null \&\& nextKmers.isEmpty())}
+        \State nextKmers = getNextKmers(dirty, kmer, color)
+    \EndIf
+
+    \State return nextKmers
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Finally, we present in Figure \ref{fig:uml} the UML diagram of the relevant parts of codebase encapsulating the relationships between \texttt{CortexGraph} (manager of access to underlying disk representation of the multi-color de Bruijn graph); \texttt{CortexRecord} (decodes graph records into kmer, coverage, and incoming/outgoing edges); \texttt{CortexKmer} (the kmer itself, along with orientation information); the utility method object \texttt{CortexUtils} (a collection of miscellaneous methods written to facilitate graph navigation); and the \texttt{AnnotatedVertex} and \texttt{AnnotatedEdge} objects (used to store subgraphs and metadata).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{uml}
+  \caption{Relationships between the \texttt{CortexGraph}, \texttt{CortexRecord}, \texttt{CortexKmer}, \texttt{CortexUtils}, \texttt{AnnotatedVertex}, and \texttt{AnnotatedEdge} objects.}
+  \label{fig:uml}
+\end{figure}
+
+For clarity of the pseudocode presented below, we will refrain from referring to the object to which a method is bound.  For example, rather than specifying \texttt{CortexUtils.getNextKmer(...)} in an algorithm, we shall simply write \texttt{getNextKmer(...)}.  We \textit{will} refer to the parent object if doing so implies different data being accessed.  For example, \texttt{clean.findRecord(...)} and \texttt{dirty.findRecord(...)} refer to different data sources, the former being the error-cleaned data, the latter data that has not be processed in this manner.
 
 \section{Variant motifs}
-Just as reference-based methods will search for motifs in the data representing variants (e.g. mismatches, gaps, or unusual truncations in the read alignments; read pairs aligning much further apart than expected; chimeras or inter-chromosomal alignments; etc.), so must we scan for indicative motifs in the assembly graph.  Before we discuss the precise nature of these motifs, it is useful to draw a distinction between "simple" and "complex" variants.  A "simple" variant is a SNP, insertion, or deletion that occurs within a single chromosome.  A "complex" variant is a homologous or non-homologous recombination, translocation, or other interchromosomal exchange.  The patterns inherent to these two categories of variants are very different.
+Just as reference-based methods search for motifs in the data representing variants (e.g. recurrent mismatches, gaps, or unusual truncations in the read alignments; read pairs aligning much further apart than expected; chimeras or inter-chromosomal alignments; etc.), so must we scan for indicative motifs in the assembly graph.  Before we discuss the precise nature of these motifs, it is useful to draw a distinction between "simple" and "complex" variants.  A "simple" variant is a SNP, insertion, or deletion that occurs within a single chromosome.  A "complex" variant could be a homologous or non-homologous recombination, translocation, or other interchromosomal exchange - something that does not fit within the confines of the straightforward SNP or indel classification.  The patterns inherent to these two categories of variants are very different.
 
 \subsection{Simple variant motifs}
-Simple variants in \textit{de novo} assembly data are typically described "bubbles" in the de Bruijn graph: regions where a variant has broken the homology between sequences, resulting in flanking kmers that are shared between the samples and spanning kmers that differ through the variant itself.  In a single diploid sample, this could be a heterozygous SNP or indel between two homologous chromosomes.  In haploid samples, one or more samples may differ from the others, resulting in the bubble.
+Simple variants in \textit{de novo} assembly data typically manifest as "bubbles" in the de Bruijn graph: regions where a variant has broken the homology between sequences, resulting in flanking kmers that are shared between the samples and spanning kmers that differ through the variant itself.  In a single diploid sample, this could be a heterozygous SNP or indel between two homologous chromosomes.  In a collection of haploid samples, one or more samples may differ from the others, resulting in the bubble.
 
-As an illustration, consider three sequences from a mother-father-child pedigree, shown in figure \ref{fig:db_graph_cartoon}a.  While the maternal and paternal haplotypes (green and blue, respectively) are identical, the child's haplotype (red) differs by a single C to G SNP.  Figure \ref{fig:db_graph_cartoon}b shows the resulting multi-color de Bruijn $k=3$ graph built from this data.  The mutation has given rise to the canonical bubble motif in the graph.  Three novel kmers (kmers present in the child and absent in the parents) spanning the variant allele are present.  Figure \ref{fig:snp_no_errors} is an equivalent graph for another simulated SNP, shown with more context and constructed with a much larger value of $k$ appropriate for $76$ - $100$ bp read lengths, typical of NGS datasets (in this case, $k=47$).
+As an illustration, consider three sequences from a mother-father-child pedigree, shown in Figure \ref{fig:db_graph_cartoon}a.  While the maternal and paternal haplotypes (green and blue, respectively) are identical, the child's haplotype (red) differs by a single C to G SNP.  Figure \ref{fig:db_graph_cartoon}b shows the resulting multi-color de Bruijn $k=3$ graph built from this data.  The mutation has given rise to the canonical bubble motif in the graph.  Three novel kmers (kmers present in the child and absent in the parents) spanning the variant allele are present.  Figure \ref{fig:snp_no_errors} is an equivalent graph for another simulated SNP, shown with more context and constructed with a much larger value of $k$ appropriate for $76$ - $100$ bp read lengths, typical of second-generation sequencing datasets (in this case, $k=47$).
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{db_graph_cartoon}
-  \caption{a. Haploid sequences from a mother (green), father (blue), and child (red), the last differing from the first two by a single SNP.  b. The resulting multi-color de Bruijn graph for $k=3$. Red vertices denote kmers that are deemed "novel", i.e. present in the child and absent in the parents. Edge colors reflect the samples in which the connected pairs of kmers are found. Edges that are part of the bubble (variant call) are displayed with thicker lines.}
+  \caption{A simple variant motif for a C to G SNP.  a. Haploid sequences from a mother (green), father (blue), and child (red), the last differing from the first two by a single base substitution.  b. The resulting multi-color de Bruijn graph for $k=3$.  Red vertices denote kmers that are deemed "novel", i.e. present in the child and absent in the parents. Edge colors reflect the samples in which the connected pairs of kmers are found. Edges that are part of the bubble (variant call) are displayed with thicker lines.}
   \label{fig:db_graph_cartoon}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.5\textwidth]{snp_no_errors}
-  \caption{A multi-color de Bruijn graph at $k=47$ for a haploid pedigree spanning a simulated \textit{de novo} SNP.  Vertex labels have been supressed for clarity.  Spatial layout is arbitrary and for display purposes only.}
+  \caption{A multi-color de Bruijn graph at $k=47$ for a haploid pedigree spanning a simulated \textit{de novo} SNP, produced by our VisualCortex software.  Vertex labels have been supressed for clarity.  Spatial layout is arbitrary and for display purposes only.}
   \label{fig:snp_no_errors}
 \end{figure}
 
-All simple variants will have this basic structure: a bubble in the graph that separates the variant samples from the non-variant samples.  The only major difference is the length of each branch: longer for an insertion in the child, shorter for a deletion (note that for short events, this is generally not apparent from the display, as evidenced by figures \ref{fig:ins_no_errors} and \ref{fig:del_no_errors}).
+All simple variants will have this basic structure: a bubble in the graph that separates the variant samples from the non-variant samples.  The only major difference is the length of each branch: longer for an insertion in the child, shorter for a deletion (note that for short events, this is generally not apparent from the display, as evidenced by Figures \ref{fig:ins_no_errors} and \ref{fig:del_no_errors}).
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=0.5\textwidth]{ins_no_errors}
+    \includegraphics[width=0.9\textwidth]{ins_no_errors}
   \caption{A $5$ bp insertion in the child}
   \label{fig:ins_no_errors}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=0.5\textwidth]{del_no_errors}
+    \includegraphics[width=0.9\textwidth]{del_no_errors}
   \caption{A $5$ bp deletion in the child}
   \label{fig:del_no_errors}
 \end{figure}
@@ -45,31 +141,47 @@ Many variants may occur on the haplotypic background of one parent and not the o
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=0.5\textwidth]{td_haplotypic_background}
+    \includegraphics[width=0.9\textwidth]{td_haplotypic_background}
   \caption{A tandem duplication on the haplotypic background of the mother.}
   \label{fig:td_haplotypic_background}
 \end{figure}
 
-Finally, it is possible to encounter variants where the path through the graph taken by the child can appear to follow both the variant and non-variant paths, as demonstrated by figure \ref{fig:inv_child_follows_parents}.  Such a scenario may arise by a mutation on a sequence with copy number greater than $1$: both the unaltered and altered sequences would then exist simultaneously in the child's genome.
+Finally, it is possible to encounter variants where the path through the graph taken by the child can appear to follow both the variant and non-variant paths, as demonstrated by Figure \ref{fig:inv_child_follows_parents}.  Such a scenario may arise by a mutation on a sequence with copy number greater than $1$: both the unaltered and altered sequences would then exist simultaneously in the child's genome.
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=0.5\textwidth]{inv_child_follows_parents}
+    \includegraphics[width=0.9\textwidth]{inv_child_follows_parents}
   \caption{A variant wherein the child's path does not simply diverge from that of the parents, but rather navigates both.}
   \label{fig:inv_child_follows_parents}
 \end{figure}
 
 \subsection{Complex variant motifs}
 
-Recombination events (allelic crossovers or gene conversion events; NAHR events) will not necessarily appear as bubbles.  Bubbles form in the graph when parental and progeny haplotypes diverge (at the site of a variant) and reconnect (at the flanking homologous regions).  In a recombination event, the haplotypes do not necessarily reconnect.  In a crossover or gene conversion event, as in Figure \ref{fig:recomb}, the progeny's graph should follow one parent or the other, switching at the crossover site.  Gene conversions and other multiple crossovers may switch back and forth several times.  These events can be detected simply by keeping track of which parent's graph is apparently being followed.  However, we caution the reader that it's quite likely that many events of this nature will likely go uncalled or improperly called.  For such recombination events to be detected, a kmer spanning two proximal variants must be present.  This is unlikely to occur for simple crossovers, particularly in genomes of reasonably low heterozygosity, as neighboring variants beyond a kmer's length away will not give rise to novel kmers necessary for the event's detection.  It is perhaps slightly more likely for gene conversion events, where the multiple crossovers proximal to a variant exclusive to one of the parents will generate the sought-after novel kmer signal.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\textwidth]{gc}
+  \caption{A gene conversion event}
+  \label{fig:gc}
+\end{figure}
 
-NAHR events are trickier; as these events are generally mitotic rather than meiotic events, the expected motif is that a child's graph should follow the same parent, but connect disjoint components of the graph (e.g. telomeres of different chromosomes) through novel kmers.  In principle, one should be able to detect such an event by testing whether removing the child's contribution to the pedigree subgraph results in disrupting the otherwise connected components\cite{Hopcroft:1971vx}.  In practice, however, NAHR events are mediated by homology between low-complexity regions of the subtelomeric genomic regions.  The homology will result in confounding connections between disparate regions of the graph.  An easier solution is to track the parent apparently being copied from and determine the chromosome of origin for each kmer present in the flanking regions of the novel kmers.  This is only feasible if one happens to have draft reference genomes for which a kmer's chromosome of origin can be approxiately determined.
+Recombination events (allelic crossovers or gene conversion events; NAHR events) will not necessarily appear as bubbles.  Bubbles form in the graph when parental and progeny haplotypes diverge (at the site of a variant) and reconnect (at the flanking homologous regions).  In a recombination event, the haplotypes do not necessarily reconnect.  In a crossover or gene conversion event, as in Figure \ref{fig:gc}, the progeny's graph should follow one parent or the other, switching at the crossover site.  Gene conversions and other multiple crossovers may switch back and forth several times.  These events can be detected simply by keeping track of which parent's graph is apparently being followed.  However, we caution the reader that it's quite likely that many events of this nature will likely go uncalled or improperly called.  For such recombination events to be detected, a kmer spanning two proximal variants must be present.  This is unlikely to occur for simple crossovers, particularly in genomes of reasonably low heterozygosity, as neighboring variants beyond a kmer's length away will not give rise to novel kmers necessary for the event's detection.  It is perhaps slightly more likely for gene conversion events, where the multiple crossovers proximal to a variant exclusive to one of the parents will generate the sought-after novel kmer signal.
+
+NAHR events are trickier; as these events are generally mitotic rather than meiotic events, the expected motif is that a child's graph should follow the same parent, but connect disjoint components of the graph (e.g. telomeres of different chromosomes) through novel kmers.  In principle, one should be able to detect such an event by testing whether removing the child's contribution to the pedigree subgraph results in disrupting the otherwise connected components\cite{Hopcroft:1971vx}.  In practice, however, NAHR events are mediated by homology between low-complexity regions of the subtelomeric genomic regions.  The homology will result in confounding connections between disparate regions of the graph.  An easier solution is to track the parent apparently being copied from and determine the chromosome of origin for each kmer present in the flanking regions of the novel kmers.  This is only feasible if one happens to have draft reference genomes for which a kmer's chromosome of origin can be approximately determined.
 
 \subsection{Handling errors in sequencing}
 
-Bubble and non-bubble motifs are trivial to find and navigate if there are no errors in the sequence data, but much more difficult to navigate in the presence of errors.  Errors manifest as extraneous branches in the graph, adding ambiguity to traversals.  Without a guide as to which branch to explore at a junction, we are either forced to abandon the traversal, make a guess, or explore all possible branches.  The former is overly conservative; many variants will go untyped.  The second is hazardous; there's the very real potential for choosing erroneously and typing the variant incorrectly.  The latter is computationally expensive; errors explore the complexity of the graph, making it very difficult (if not impossible) to find the correct path through the graph.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\textwidth]{indel_with_errors_collapsed_and_expanded}
+  \caption{Indel with sequencing errors in graph.  a. Selected extraneous branches expanded for illustrative purposes  b. All extraneous branches collapsed.}
+  \label{fig:indel_with_errors_collapsed_and_expanded}
+\end{figure}
 
-To solve this, recall that DNMs do more than open up a bubble motif in the graph.  Idaelly, each kmer along the variant path is novel.  If we assume that branches following the novl branch at junctions are correct and linked with the current variant being explored, we can use these novel kmers as "sign posts" to mark successful traversals.  Navigating a branch and not seeing a sign post gives us adqeuate cause to abandon a branch in favor of another.
+Bubble and non-bubble motifs are trivial to find and navigate if there are no errors in the sequence data, but this situation rarely arises in real data.  Real data is subject to sequencing errors, making graph traversal much more difficult.  Errors manifest as extraneous branches in the graph, adding ambiguity to traversals.  Without a guide as to which branch to explore at a junction, we are either forced to abandon the traversal, make a guess, or explore all possible branches.  The first option is overly conservative; many variants will go untyped.  The second is hazardous; there is the very real potential for choosing erroneously and typing the variant incorrectly.  The last is computationally expensive; errors explode the complexity of the graph, making it prohibitively costly to find the correct path through the graph.
+
+To solve this, recall that DNMs do more than open up a bubble motif in the graph.  Ideally, each kmer along the variant path is novel.  If we assume that branches following the novel branch at junctions are correct and linked with the current variant being explored, we can use these novel kmers as "sign posts" to mark successful traversals.  Navigating a branch and not seeing a sign post gives us adequate cause to abandon a branch in favor of another.
+
+Figure \ref{fig:indel_with_errors_collapsed_and_expanded}a-b depict a simulated indel in imperfect data, the former with some of these extraneous branches displayed, the latter with them suppressed.  Branches with novel kmers (the red vertices) clearly complete the variant, while branches lacking these novel kmers are superfluous to the traversal and can be discarded without loss.  This limits the amount of unnecessary traversal in the graph, making it easier to find paths through the parental and child colors to form the variant.
 
 \section{Calling and classifing \textit{de novo} variants}
 
@@ -93,18 +205,18 @@ We first seek to build a list of novel kmers that are both \textit{confident} (i
 
 For a deeply sequenced sample, we expect all kmers in the genome to be of similarly high coverage.  While there will inevitably be regions of the genome where coverage is poor owing to failure to amplify regions with high GC content, the Lander-Waterman statistics in Chapter \ref{ch:motivation} suggest we should easily see many copies of the entire \textit{P. falciparum} genome at a coverage of $100x$.  We can therefore assume that failure to reach a certain coverage threshold is indicative of sequencing error, and such kmers can be removed as candidates from the novel kmer list.
 
-The problem remains as to where the threshold should be set.  We plotted the histogram of kmer coverage, shown in Figure \ref{fig:covthreshold}, smoothing the resulting distribution with a non-parametric LOESS fit.  The smoothed histogram makes it easier to find the first local minimum using Algorithm \ref{alg:localminimum}.
+The problem remains as to where the threshold should be set.  For each sample, we plotted the histogram of kmer coverage, shown in Figure \ref{fig:covthreshold}, smoothing the resulting distribution with a non-parametric LOESS fit.  The smoothed histogram makes it easier to find the first local minimum using Algorithm \ref{alg:localminimum}.
 
 \begin{algorithm}
 \caption{Compute the local minimum of a kmer coverage distribution}
 \label{alg:localminimum}
 \begin{algorithmic}[1]
 \Function{firstLocalMinimum}{coverageHist}
-    \State $y = laggedDifferences(c(INT_MAX, x)) > 0L$
-    \State $y = cumSum(equalRunLengths(y).lengths)$
-    \State $y = y[seq(2L, length(y), 2L)]$
+    \State y = laggedDifferences(c(INT\_MAX, x)) > 0L
+    \State y = cumSum(equalRunLengths(y).lengths)
+    \State y = y[seq(2L, length(y), 2L)]
 
-    \State $\textrm{return(y[2])}$
+    \State return(y[2])
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -118,7 +230,7 @@ The problem remains as to where the threshold should be set.  We plotted the his
 
 \subsubsection{Remove possible contaminants}
 
-Contamination can occur during sequencing library preparation due to handling from human operators (transferring either bacterial or human genetic material to the library) or from other samples (often from different species) being processed in the same laboratory.  Contamination would result in kmers that appear novel - owing to their absense in the parents - but are irrelevant for our study.  It is perhaps not a paramount concern when processing \textit{P. falciparum} data, as the genome is very different than any other sample likely to be a contaminant.  However, it may contribute a false-positive rate that we can easily mitigate.
+Contamination can occur during sequencing library preparation due to handling from human operators (transferring either bacterial or human genetic material to the library) or from other samples (often from different species) being processed in the same laboratory.  Contamination would result in kmers that appear novel - owing to their absense in the parents - but are irrelevant for our study.  It is perhaps not a paramount concern when processing \textit{P. falciparum} data, as the genome is very different than any other sample likely to be a contaminant.  However, it may contribute false-positives that we can easily mitigate.
 
 To remove the effects of contamination, we run every confident novel kmer through BLAST\cite{Altschul:1990dw}.  Specifically, we used the \texttt{blastn} package and all available BLAST nucleotide databases to identify the likely species of every confident novel $47$-mer in each sample.  Any unidentified kmer or apparently \textit{P. falciparum} kmer was retained; all others were removed.  In practice, this removes anywhere from dozens to thousands of kmers from needing to be considered; as evidenced by Figure \ref{fig:contam}, the exact number varies as each sample is prepared independently, at different times and by different personnel.
 
@@ -154,7 +266,7 @@ Typically, graph exploration can be accomplished with a so-called \textit{depth-
 
   \While{\textrm{!s.isEmpty()}}
     \State $current = s.pop()$
-    \If{$\textrm{visited.contains(current)}$}
+    \If{($\textrm{visited.contains(current)}$)}
         \State $\textrm{next}$
     \EndIf
     \State $\textrm{visited.add(current)}$
@@ -179,8 +291,7 @@ The solution is to instead conduct a DFS with stopping conditions and recursivel
     \State sourceKmersAllColors = goForward ? getPrevKmers(clean, dirty, kmer) : getNextKmers(clean, dirty, kmer)
     \State sourceKmers = sourceKmersAllColors.get(color)
 
-    \State dfs = new Graph<AnnotatedVertex, AnnotatedEdge>()
-    \State stopper = instantiateStopper(stopperClass)
+    \State dfs = new AnnotatedGraph()
 
     \Repeat
         \State cv = kmer
@@ -190,48 +301,34 @@ The solution is to instead conduct a DFS with stopping conditions and recursivel
             \State cr = dirty.findRecord(cv)
         \EndIf
 
-        \State prevKmers = CortexUtils.getPrevKmers(clean, dirty, cv);
-        \State nextKmers = CortexUtils.getNextKmers(clean, dirty, cv));
-        \State adjKmers  = goForward ? nextKmers : prevKmers;
+        \State prevKmers = getPrevKmers(clean, dirty, cv)
+        \State nextKmers = getNextKmers(clean, dirty, cv)
+        \State adjKmers  = goForward ? nextKmers : prevKmers
 
-        \State numVerticesAdded = addVertexAndConnect(dfs, cv, prevKmers, nextKmers)
+        \State addVertexAndConnect(dfs, cv, prevKmers, nextKmers)
 
-        \If{stopper.keepGoing(cr, g, depth, dfs.vertexSet().size(), adjKmers.get(color).size()) \&\& !sourceKmers.contains(kmer) \&\& !history.contains(kmer)}
-            \State history.add(kmer);
+        \If{(stopper.keepGoing(cr, g, depth, dfs.vertexSet().size(), adjKmers.get(color).size()) \&\& !history.contains(kmer))}
+            \State history.add(kmer)
 
-            \If{adjKmers.get(color).size() == 1}
-                \State kmer = adjKmers.get(color).iterator().next();
-            \ElsIf{adjKmers.get(color).size() != 1}
-                \State childrenWereSuccessful = false;
+            \If{(adjKmers.get(color).size() == 1)}
+                \State kmer = next(adjKmers.get(color))
+            \ElsIf{(adjKmers.get(color).size() != 1)}
+                \State childrenWereSuccessful = false
 
-                \For{ak in adjKmers.get(color)}
-                    \If{(!ak.equals(firstKmer))}
-                        \State branch = dfs(clean, dirty, ak, color, g, stopperClass, depth + isNovelKmer(cr) ? 0 : 1, goForward, history)
+                \For{(ak in adjKmers.get(color))}
+                    \State branch = dfs(clean, dirty, ak, color, g, stopperClass, depth + isNovelKmer(cr) ? 0 : 1, goForward, history)
 
-                        \If{branch != null}
-                            \State Graphs.addGraph(dfs, branch)
-                            \State childrenWereSuccessful = true
-                        \Else
-                            \For{av in dfs.vertexSet()}
-                                \If{av.getKmer().equals(ak)}
-                                    \State av.setFlag("branchRejected")
-                                \EndIf
-                            \EndFor
-                        \EndIf
+                    \If{(branch != null)}
+                        \State addGraph(dfs, branch)
+                        \State childrenWereSuccessful = true
                     \EndIf
                 \EndFor
 
-                \If{childrenWereSuccessful || stopper.hasTraversalSucceeded(cr, g, depth, dfs.vertexSet().size(), 0)}
+                \If{(childrenWereSuccessful || stopper.hasTraversalSucceeded(cr, g, depth, dfs.vertexSet().size(), 0))}
                     \State return dfs
-                \Else
-                    \For{av in dfs.vertexSet()}
-                        \If{(av.getKmer().equals(kmer))}
-                            \State av.setFlag("branchRejected")
-                        \EndIf
-                    \EndFor
                 \EndIf
             \EndIf
-        \ElsIf{stopper.traversalSucceeded()}
+        \ElsIf{(stopper.traversalSucceeded())}
             \State return dfs
         \Else
             \State return null
@@ -256,12 +353,12 @@ The child's stopping conditions on traversal success or failure are provided in 
 \label{alg:child_hasTraversalSucceded}
 \begin{algorithmic}[1]
 \Function{hasTraversalSucceeded}{cr, g, depth, size, edges}
-    \If{goalSize == 0 \&\& (cr.getCoverage(1) > 0 || cr.getCoverage(2) > 0)}
+    \If{(goalSize == 0 \&\& (cr.getCoverage(1) > 0 || cr.getCoverage(2) > 0))}
         \State goalSize = size
         \State goalDepth = depth
     \EndIf
 
-    \If{goalSize > 0 \&\& isNovel(cr)}
+    \If{(goalSize > 0 \&\& isNovel(cr))}
         \State goalSize = size
         \State goalDepth = depth
     \EndIf
@@ -295,7 +392,7 @@ The parents' stopping conditions on traversal success or failure are provided in
     \State v = null
     \State rejoinedGraph = false
 
-    \If{ g.containsVertex(fw) || g.containsVertex(rc) }
+    \If{(g.containsVertex(fw) || g.containsVertex(rc))}
         \State rejoinedGraph = true
 
         \For{av in g.vertexSet()}
@@ -349,29 +446,29 @@ Let us first detail how we annotate the viable starts and ends of the variant, w
 \begin{algorithmic}
 \Function{annotateStartsAndEnds}{b}
     \For{av in b.vertexSet()}
-        \If{b.outDegreeOf(av) > 1}
+        \If{(b.outDegreeOf(av) > 1)}
             \State aes = b.outgoingEdgesOf(av)
 
             \State childEdges = \{\}
             \State parentEdges = \{\}
 
-            \For{AnnotatedEdge ae in aes}
-                \If{ae.isPresent(0) \&\& ae.isAbsent(1) \&\& ae.isAbsent(2)} 
+            \For{(AnnotatedEdge ae in aes)}
+                \If{(ae.isPresent(0) \&\& ae.isAbsent(1) \&\& ae.isAbsent(2))} 
                     \State childEdges.add(ae)
                 \EndIf
 
-                \If{ae.isPresent(color)}
+                \If{(ae.isPresent(color))}
                     \State parentEdges.add(ae)
                 \EndIf
             \EndFor
 
-            \If{childEdges.size() > 0 \&\& parentEdges.size() > 0 || beAggressive}
+            \If{(childEdges.size() > 0 \&\& parentEdges.size() > 0)}
                 \State av.setFlag("start")
                 \State candidateStarts.add(av)
             \EndIf
         \EndIf
 
-        \If{b.inDegreeOf(av) > 1}
+        \If{(b.inDegreeOf(av) > 1)}
             \State aes = b.incomingEdgesOf(av)
 
             \State childEdges = \{\}
@@ -462,7 +559,7 @@ To use this algorithm for allele identification, we iterate through all possible
 This algorithm will return the child and parental haplotypes.  To identify the precise alleles of the event, we simply trim back the homologous regions of the haplotypes with Algorithm \ref{alg:trim}.
 
 \begin{algorithm}
-\caption{Finding the shortest path in a graph}
+\caption{Trim back haplotypes to reveal alleles}
 \label{alg:trim}
 \begin{algorithmic}
 \Function{trimHaplotypes}{child, parent}
@@ -487,7 +584,7 @@ This algorithm will return the child and parental haplotypes.  To identify the p
 
 For simple variants (those that conform to the bubble motif), event classification is reasonably straightforward.  We simply inspect the recovered alleles and evaluate them against simple rules.  For example, a SNP should be a single nucleotide in length.  An insertion should have a parental allele length of $1$ and a child allele length $> 1$.
 
-To classify complex variants, we rely on other heuristics.  GC events are classified by keeping track of which parent the child's genome appears to be exclusively copying from (simply by measuring when kmer coverage has dropped from one parent and returned in the other), detailed in Algorithm \ref{alg:hasSwitches}.
+To classify complex variants, we rely on other heuristics.  GC events are classified by keeping track of which parent the child's genome appears to be exclusively copying from (simply by measuring when kmer coverage has dropped from one parent and returned in the other), detailed in Algorithm \ref{alg:hasSwitches}.  NAHR events, involving recombinations between different chromosomes, are detected by examining if any kmers are uniquely found on different chromosomes, detailed in Algorithm \ref{alg:hasChimeras}.
 
 \begin{algorithm}
 \caption{Stretch has switches}
@@ -550,18 +647,201 @@ To classify complex variants, we rely on other heuristics.  GC events are classi
 \end{algorithmic}
 \end{algorithm}
 
+\begin{algorithm}
+\caption{Stretch has chimeras}
+\label{alg:hasChimeras}
+\begin{algorithmic}
+\Function{hasChimeras}{stretch, lookup}
+    \State chrCount = \{\}
+
+    \ForAll{kmers k in stretch}
+        \If{lookup.numAlignments(k) == 1}
+            \State chrCount[lookup.getFirstAlignment(k).getChr()]++
+        \EndIf
+    \EndFor
+
+    \State return chrCount.size() > 1
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{classification}
+  \caption{}
+  \label{fig:classification}
+\end{figure}
+
+The classification algorithm can be described by the decision tree in Figure \ref{fig:classification}.
+
+\subsubsection{Choosing haplotypic background}
+
+When calling variants, we do not know the haplotypic background upon which a variant has occured.  We must compare the child's graph to the mother's and then to the father's, making separate calls.  This results in two variant calls for the same event.  A single event must be chosen.  In cases where the child and parental alleles are identical, this is trivial.  Additionally, variants where the event can be identified against one parent but not the other are straightforward.  The problematic events are those that have conflicting descriptions between parents.  In this situation, we heuristically assign a score for various properties of the variant, choosing the representation with the highest score.  This has the effect of preferring simpler descriptions (e.g. "SNP") to more complex ones (e.g. "GC").
+
+\begin{algorithm}
+\caption{Score variant}
+\label{alg:scoreVariant}
+\begin{algorithmic}
+\Function{chooseVariant}{gvc}
+    \State scores = []
+
+    \ForAll{colors c}
+        \If{(gvc.traversalIsComplete(c))}
+            \State scores[c]++
+        \EndIf
+        \If{(gvc.variantType(c) != "unknown"}
+            \State scores[c]++
+        \EndIf
+        \If{(gvc.variantType(c) not in ("GC", "NAHR"))}
+            \State scores[c]++
+        \EndIf
+    \EndFor
+
+    \State bestColor = whichMax(scores)
+
+    \State return (scores[0] == scores[1] ? 0 : bestColor)
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
 \subsubsection{Mark traversed novel kmers as used}
 
-\subsection{Evaluate performance}
-\subsubsection{Generate novel kmer to variant map}
-\subsubsection{Load variant containing a novel kmer}
-\subsubsection{Compare alleles}
+We then mark all the novel kmers we saw used in the stretch as used so we do not process them again.  This allows us to keep track of our progress, only acting on kmers that have not been associated to any variant yet.
 
-\subsection{Summary}
+\subsection{Evaluate performance}
+
+We evaluated the performance of our graphical DNM caller by running the thing on some simulated data.  Note that the way a variant is simulated and the way a variant is called are not necessarily identical.  In particular, indels are tricky because there is not a standard representation in graphs.  Usually, when indels are called in reference-based methods, the reference is taken to be the forward strand and indels are left-shifted as far as possible.  In graphs, there is no information available for determining orientation.  When they were simulated, we knew what the forward strand was, but we do not know that in the graph.  Thus, when we go to check on the presence of a variant, we must check it in both orientations, and accounting for multiple representations.
+
+\subsubsection{Pre-compute novel kmer to variant map}
+
+We iterated through all variants, extracting sequence from the simulated child's reference genome between $\textrm{start} - (2k - 1)$ and $\textrm{stop} + (2k - 1)$ bp.  We then extracted each kmer from this sequence and, if the kmer is novel, emitting a table row mapping the novel kmer to variant ID, variant type, and position in the child's reference genome.  Note that because we chose to space our variants out over considerable distance, it is generally not possible for a kmer to map to multiple variants.  However, as we have placed very few constraints on variant positioning otherwise, it is possible a simulated variant has landed in a low-complexity region that occurs multiple times throughout the genome, and that multiple variants thus share novel kmers.  In that instance, the first variant we see during processing is assigned the novel kmer.
+
+\subsubsection{Load variant containing a novel kmer and comparing}
+
+If we are in evaluation mode (that is, if we've a novel kmer to variant map along with a dataset), then after each variant we call, we check if any of the kmers involved in the variant call are in the map, and load the relevant variant information.  We then evaluate our call using Algorithm \ref{alg:evalVariant}.
+
+\begin{algorithm}
+\caption{Evaluate variant}
+\label{alg:evalVariant}
+\begin{algorithmic}
+\Function{evalVariant}{call, truth, stretch}
+    \State relevantVariants = []
+
+    \ForAll{kmers in stretch}
+        \If{(truth.contains(kmer))}
+            \State push(relevantVariants, truth.get(kmer))
+        \EndIf
+    \EndFor
+
+    \State bestVariant = null;
+    \ForAll{vi in relevantVariants}
+        \State ref = call.getParentalAllele()
+        \State alt = call.getChildAllele()
+
+        \State refStretch = call.getParentalStretch()
+        \State altStretch = call.getChildStretch()
+
+        \State found = false;
+
+        \If{(!found)}
+            \Comment left-shift variants and check
+            \State pos = call.getStart()
+
+            \While{(pos >= 0 \&\& pos + ref.length() < refStretch.length() \&\& pos + alt.length() < altStretch.length())}
+                \State refFw = refStretch.substring(pos, pos + ref.length())
+                \State altFw = altStretch.substring(pos, pos + altLength)
+
+                \State refRc = reverseComplement(refFw);
+                \State altRc = reverseComplement(altFw)
+
+                \If{(known ref and alt alleles match called fw or rc alleles)}
+                    \State ref = (refFw or refRc)
+                    \State alt = (altFw or altRc)
+                    \State found = true;
+                    \State break;
+                \EndIf
+
+                \State pos--
+            \EndWhile
+        \EndIf
+
+        \If{(!found)}
+            \Comment right-shift variants and check
+            \State pos = call.getStart()
+
+            \While{(pos >= 0 \&\& pos + ref.length() < refStretch.length() \&\& pos + alt.length() < altStretch.length())}
+                \State refFw = refStretch.substring(pos, pos + refLength)
+                \State refRc = reverseComplement(refFw)
+
+                \State altFw = altStretch.substring(pos, pos + altLength)
+                \State altRc = reverseComplement(altFw)
+
+                \If{(known ref and alt alleles match called fw or rc alleles)}
+                    \State ref = (refFw or refRc)
+                    \State alt = (altFw or altRc)
+                    \State found = true;
+                    \State break;
+                \EndIf
+
+                \State pos++
+            \EndWhile
+        \EndIf
+
+        \Comment Maybe what we've found is a truncated version of what we were expecting
+        \State knownRef = vi.ref
+        \State knownAlt = vi.alt == null ? "" : vi.alt
+
+        \If{(!found \&\& knownRef.length() > ref.length() \&\& knownAlt.length() > alt.length() \&\& knownRef.length() == knownAlt.length())}
+            \State refFw = ref;
+            \State altFw = alt;
+            \State refRc = reverseComplement(refFw);
+            \State altRc = reverseComplement(altFw);
+
+            \State refFinal = null, altFinal = null;
+
+            \If{(knownRef contains refFw or refRc and knownAlt contains altFw or altRc)}
+                \State refFinal = (refFw or refRc)
+                \State altFinal = (altFw or altRc)
+            \EndIf
+
+            \If{(refFinal != null \&\& altFinal != null)}
+                \State r0index = knownRef.indexOf(refFinal)
+                \State a0index = knownAlt.indexOf(altFinal)
+                \State r1index = r0index + refFinal.length()
+                \State a1index = a0index + altFinal.length()
+
+                \If{(r0index == a0index \&\& r1index == a1index \&\&
+                        knownRef.substring(0, r0index).equals(knownAlt.substring(0, a0index)) \&\&
+                        knownRef.substring(r1index, knownRef.length()).equals(knownAlt.substring(a1index, knownAlt.length())))}
+                    knownRef = ref;
+                    knownAlt = alt;
+                \EndIf
+            \EndIf
+        \EndIf
+
+        \State vi.found = true;
+        \State vi.matches = (knownRef.equals(ref) \&\& knownAlt.equals(alt)) || vi.type.equals(call.getType())
+
+        \If{(bestVi == null || vi.matches)}
+            \State bestVi = vi;
+        \EndIf
+
+        \If{(bestVi != null)}
+            \State knownRef = bestVi.ref;
+            \State knownAlt = bestVi.alt != null ? bestVi.alt : "";
+        \EndIf
+    \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \section{Results on simulated data}
 
-\begin{table}[]
+We ran our algorithm on the perfect and realistic simulated datasets presented in Chapter \ref{ch:simulation}.  Looking first at purely event recovery without classification (i.e. did we find \textit{de novo} variants, irrespective of whether we classified them correctly), we summarize our stats in Tables \ref{tbl:roc_perfect} and \ref{tbl:roc_realistic}.  In both cases, our sensitivity and specificity to DNMs is very high - greater than $98\%$ in nearly all cases.  Note that the true negatives (tn) are effectively every kmer that we did \textit{not} call in our dataset, which effecitvely makes our specificity nearly perfect, as the use of the novel kmers prevents us from making calls in the vast majority of the graph.
+
+Additionally in these tables, we also computed the "redundant call", or "rc" metric.  The rc metric reveals an important caveat regarding graph calls: should the traversals fail and the alleles of the variant not ascertained, the novel kmers involved in the variant will not be marked as used.  However, we still emit a variant "event", despite our inability to classify it.  In the subsequent iteration of the algorithm, the remaining novel kmers will be picked up for calling again, leading to the same variant being emitted multiple times.  Thus, we must exercise caution with untyped variants: the rate at which they appear in our callset may be slightly higher (up to $10\%$) than the rate at which they truly exist in the genome.
+
+\begin{sidewaystable}[]
 \centering
 \caption{ROC metrics on simulated perfect data}
 \label{tbl:roc_perfect}
@@ -591,9 +871,9 @@ sn & sim & fp & fn & tp & tn & rc & sens & spec & prec & npv & fpr & fnr & fdr &
 19 & perfect & 1 & 0 & 98 & 22236313 & 6 & 1.0000 & 1 & 0.9899 & 1 & 0 & 0.0000 & 0.0101 & 1\\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{sidewaystable}
 
-\begin{table}[]
+\begin{sidewaystable}[]
 \centering
 \caption{ROC metrics on simulated realistic data}
 \label{tbl:roc_realistic}
@@ -623,7 +903,7 @@ sn & sim & fp & fn & tp & tn & rc & sens & spec & prec & npv & fpr & fnr & fdr &
 19 & realistic & 2 & 0 & 95 & 77480228 & 6 & 1.0000 & 1 & 0.9794 & 1 & 0 & 0.0000 & 0.0206 & 1\\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{sidewaystable}
 
 \begin{figure}[h!]
   \centering
@@ -639,9 +919,8 @@ sn & sim & fp & fn & tp & tn & rc & sens & spec & prec & npv & fpr & fnr & fdr &
   \label{fig:conf_realistic_hm}
 \end{figure}
 
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{lengthHit-1}
-  \caption{Event recovery as a function of event length}
-  \label{fig:lengthHit}
-\end{figure}
+Results on event classification are shown as heatmaps in Figures \ref{fig:conf_perfect_hm} and \ref{fig:conf_realistic_hm}, with observed events on the bottom and expected events on the side.  On the observed axis, an "unknown" event denotes a variant that could not be typed.  On the expected axis, an "unknown" event is one that does not appear in the simulation list (i.e. a false positive).  The total number of events simulated that could possibly be recovered via novel kmers is the sum of each row (except for the "unknown" row, which instead enumerates the false positives and the types they've been assigned).  For the most part, variants appear on the diagonal, indicating proper classification.  Performance degrades when we move into the non-bubble motif variants (i.e. GC and NAHR) events.
+
+Gene conversion events are quite often erroneously described as SNPs.  This is likely due to the fact that the classification algorithm is looking for clear switches of parental copying in the child (copying from mother, then father, then mother again, or vice versa).  However, if variants that appear on different haplotypic backgrounds are too close to one another, $47$-bp kmers might span both, and the recombination motif that we seek may be obscured and cause the algorithm to call a SNP instead.
+
+Many NAHR events are classified as "unknown".  This is perhaps not unreasonable.  Our classification algorithm for NAHR events (Algorithm \ref{alg:hasChimeras}) requires that the stretch have kmers from different chromosomes.  However, if the stretch truncates early due to errors or homology, there may be insufficient genomic context in order to determine the chromosomes of origin, leaving us unable to classify the variant accordingly.

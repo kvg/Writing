@@ -1,8 +1,20 @@
-\chapter{Chimp}
+\chapter{\textit{Pan troglodytes}}
 \label{ch:chimp}
 
-\section{Lit review}
-\subsection{Review of Kong et al., 2002}
+Finally, we discuss a second dataset: a two-generation, $9$-member pedigree of chimpanzees (\textit{Pan troglodytes}).  In many ways, the chimpanzee pedigree is a vastly more challenging dataset to process than the \textit{falciparum} crosses.  First, while the \textit{Plasmodium falciparum} genome is approximately $23$ Mbp, the chimpanzee genome is roughly two orders of magnitude larger at $3,000$ Mbp (or $3$ Gbp).  Second, the genome is diploid rather than haploid, making haplotype copying determinations less straightforward (we cannot simply check for allele presence and absense like we did with the haploid \textit{falciparum} dataset).  Third, the chimpanzee reference genome is of lesser quality than the \textit{falciparum} reference (the former employed a whole-genome shotgun approach to the sequencing, yielding $24,132$ supercontigs that were aligned to the human reference build to reconstruct the autosomes and sex chromosomes.  The latter employed a whole-\textit{chromosome} shotgun approach, preparing and assembling each chromosome separately and fully resolving each separately).  Fourth, we do not have a draft-quality parental assemblies, and owing to the genome size, it is prohibitively expensive to generate such data as we were able to do in the previous chapter.  Finally, while we do expect the quality of the Illumina sequencing dataset to be higher in many regards ($150$ bp paired-end reads, wider fragment size distribution, more modern sequencer - Illumina HiSeq 2000 - applied), the coverage is substantially lower ($20x$ to $40x$ coverage on average), or one-fourth to one-third the coverage we had in the previous chapter.
 
-Augustine Kong et al. discuss a new genetic map of recombination rates using genotyping information from $869$ individuals in 146 Icelandic families.  This is the first such map made after the sequencing of the human genome, and is thus able to leverage the new reference sequence in order to correctly order the genotyped markers.  It is a substantially higher-resolution map than provided by the former gold-standard, the Marshfield map.  The Marshfield map contained data on only $188$ meioses, whereas the Kong et al. map contained data on $1,257$.  The new map reveals marked differences in recombination rates between males and females (e.g. the recombination rate in female autosomes is a factor of $1.65$ higher than that observed in males) for reasons beyond sequence features.
+Nevertheless, the chimpanzee dataset is an important test-bed for our \textit{de novo} mutation calling software.  Demonstrating its capacity to run on such a large dataset would open applicability of our method to other datasets (including human datasets).  Additionally, \textit{de novo} mutations have been described in this dataset before\cite{Venn:2014ep}.  This provides us with a basis for validating more of our results than in the previous chapter.  Finally, given the poor quality of the reference sequence, effective results on this dataset would indicate utility in datasets where a reference sequence is either unreliable or unavailable.
 
+\section{Data processing}
+
+\subsection{Initial data}
+\subsection{Sample processing}
+\subsection{Quality control}
+\subsection{Novel kmers}
+
+\section{\textit{De novo} mutations in the \textit{P. troglodytes} dataset}
+
+\subsection{\textit{De novo} mutations in a single sample}
+\subsection{\textit{De novo} mutations in all progeny}
+\subsubsection{Mutational spectrum}
+\subsubsection{Comparison to published calls}

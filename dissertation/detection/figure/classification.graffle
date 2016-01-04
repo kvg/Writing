@@ -2895,16 +2895,6 @@
 			<string>int</string>
 			<string>0</string>
 		</array>
-		<key>NSPrinter</key>
-		<array>
-			<string>coded</string>
-			<string>BAtzdHJlYW10eXBlZIHoA4QBQISEhAlOU1ByaW50ZXIAhIQITlNPYmplY3QAhZKEhIQITlNTdHJpbmcBlIQBKxJscHMyLndlbGwub3guYWMudWuGhg==</string>
-		</array>
-		<key>NSPrinterName</key>
-		<array>
-			<string>string</string>
-			<string>lps2.well.ox.ac.uk</string>
-		</array>
 		<key>NSRightMargin</key>
 		<array>
 			<string>float</string>

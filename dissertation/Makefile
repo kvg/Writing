@@ -12,7 +12,7 @@ simulation/simulation.tex: simulation/simulation.rnw simulation/figure/*.pdf
 detection/detection.tex: detection/detection.rnw detection/figure/*.pdf
 	cd detection && Rscript -e "library(knitr); knit('detection.rnw')"
 
-pf/pf.tex: pf/pf.rnw
+pf/pf.tex: pf/pf.rnw pf/figure/*.pdf
 	cd pf && Rscript -e "library(knitr); knit('pf.rnw')"
 
 chimp/chimp.tex: chimp/chimp.rnw
