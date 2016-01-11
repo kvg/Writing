@@ -55,7 +55,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
   \mathrel{-}       % minus as a relation
 }
 
-\graphicspath{{../motivation/figure/}{../detection/figure/}{../simulation/figure/}{../pf/figure/}}
+\graphicspath{{../motivation/figure/}{../detection/figure/}{../simulation/figure/}{../pf/figure/}{../chimp/figure/}}
 
 % =============
 % Configuration

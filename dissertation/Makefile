@@ -15,7 +15,7 @@ detection/detection.tex: detection/detection.rnw detection/figure/*.pdf
 pf/pf.tex: pf/pf.rnw pf/figure/*.pdf
 	cd pf && Rscript -e "library(knitr); knit('pf.rnw')"
 
-chimp/chimp.tex: chimp/chimp.rnw
+chimp/chimp.tex: chimp/chimp.rnw chimp/figure/*.pdf
 	cd chimp && Rscript -e "library(knitr); knit('chimp.rnw')"
 
 discussion/discussion.tex: discussion/discussion.rnw
