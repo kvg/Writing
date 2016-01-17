@@ -1,23 +1,44 @@
 \chapter{\textit{Plasmodium falciparum}}
 \label{ch:pf}
 
-In the previous chapter, we demonstrated our \textit{de novo} mutation detection software on simulated crossings of the \textit{falciparum} malaria parasites.  We now apply our work to real data: over $100$ samples taken from four separate crossings of six parasites.
+\newthought{In the previous chapter, we demonstrated our \textit{de novo} mutation detection} software on simulated crossings of the \textit{Plasmodium falciparum} malaria parasites.  We now apply our work to real data: short-read Illumina data on nearly $150$ isolates taken from four separate crossings of six parasites.
 
-No comprehensive catalog of \textit{de novo} variation in these crosses currently exists.  To date, the focus on the $3D7xHB3$, $HB3xDD2$, $7G8xGB4$ and $803xGB4$ datasets has largely been on discovering the genomic basis for phenotypic differences between the parents, and on characterizing novel antigenic forms in the children.  However, the previous phenotypic studies have verified the presence of some large structural \textit{de novo} variants - namely a handful of NAHR events involving antigenic genes.  These known events serve as useful validation data for the most difficult form of variation for our software to detect.  Furthermore, these previously observed events have occurred in low-complexity regions.  Such regions may confound DNA repair machinery and provide a substrate for the generation of \textit{de novo} variation.  These regions are outside the reach of reference-based analyses, but may be accessible with our graph-based approach.  Finally, the \textit{P. falciparum} genome is small enough to be sequenced inexpensively on current third generation sequencing platforms, enabling high-quality reconstructions of the parental genomes, and in turn, facilitating DNM discovery.  These factors make the \textit{P. falciparum} datasets a compelling study target.
+No comprehensive catalog of \textit{de novo} variation in these crosses currently exists.  To date, the focus on the $3D7xHB3$, $HB3xDD2$, $7G8xGB4$ and $803xGB4$ datasets has primarily been on discovering the genomic basis for phenotypic differences between the parents, and on characterizing novel antigenic forms in the children.  However, the previous phenotypic studies have verified the presence of some large structural \textit{de novo} variants - namely a handful of NAHR events involving antigenic genes.  These known events serve as useful validation data for the most difficult form of variation for our software to detect.  Furthermore, these previously observed events have occurred in low-complexity regions.  These regions may confound DNA repair machinery and provide a substrate for the generation of \textit{de novo} variation.  They are typically considered outside the reach of reference-based analyses (which constrain themselves to the roughly $20$ megabases of so-called "core" genome wherein divergence between multiple isolates is much lower and short reads tend to align unambiguously\cite{Miles:2015in}), but may be accessible with our graph-based approach.  Finally, the \textit{P. falciparum} genome is small enough to be sequenced inexpensively on current third generation sequencing platforms, enabling high-quality reconstructions of the parental genomes and even one of the progeny.  The parental samples facilitate DNM discovery, while the child sample serves as a validation dataset with which to evaluate our performance.  These factors make the \textit{P. falciparum} datasets a compelling study target.
 
 \section{Data processing}
 
 \subsection{Initial data}
-We obtained whole genome sequence data for parent and progeny clones of the $3D7xHB3$\cite{Walliker:1987cv}, $HB3xDD2$\cite{Wellems:1990eg}, $7G8xGB4$\cite{Hayton:2008hn}, and $803xGB4$\footnote{Rick Fairhurst and Michael Krause, personal communication} crosses.  All were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.
 
-\subsection{Sample processing}
-
-\subsubsection{Children}
-
-We used the available Illumina data to construct the de Bruijn graph structures for each child with McCortex, using a kmer size of $47$ bp and discarding bases with a quality score less than $Q5$.  The "dirty" graph (raw graph structure before any pruning is applied) was cleaned using McCortex's automatically chosen thresholds (falling back to trimming contiguous regions of the graph with coverage less than $2$ in the event that automatic thresholds could not be calculated).  As contigs were not required for our analyses, we opted to forego the paired-end read threading and contig emission steps.
-
-\subsubsection{Parents}
 \begin{table}[]
+\centering
+\caption{Summary of sequencing data for four \textit{Plasmodium falciparum} crosses}
+\label{tbl:crosssummary}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+                & 3D7xHB3       & HB3xDD2       & 7G8xGB4       & 803xGB4             \\ \midrule
+Samples         & $22$          & $42$          & $52$          & $36$                \\
+Samples QC+     & $21$          & $35$          & $49$          & $36$                \\
+Read length     & $76$          & $76$          & $76$          & $100$               \\
+Fragment size   & $300 \pm 29$  & $253 \pm 48$  & $293 \pm 21$  & $222 \pm 10$        \\
+Coverage        & $99  \pm 38$  & $121 \pm 91$  & $110 \pm 40$  & $205 \pm 106$       \\
+Platform        & Illumina GAII & Illumina GAII & Illumina GAII & Illumina HiSeq 2000 \\
+Sequencing Date & 2010          & 2009-2012     & 2010-2011     & 2014                \\ \bottomrule
+\end{tabular}
+\end{table}
+
+We obtained short-read, paired-end whole genome sequence data for parent and progeny clones of the $3D7xHB3$\cite{Walliker:1987cv}, $HB3xDD2$\cite{Wellems:1990eg}, $7G8xGB4$\cite{Hayton:2008hn}, and $803xGB4$ crosses, generously provided to us by the MalariaGen project\footnote{More information, including links to the European Nucleotide Archive where the original reads are stored, can be found at \url{http://www.malariagen.net/apps/pf-crosses/1.0/}.  Note that while the 803xGB4 data we were provided does come to us via MalariaGen, it was provided to them (and subsequently to us) as a personal communication from Michael Krause, Rick Fairhurst \textit{et al.} at the NIH.  It is not yet part of the public dataset.}.  All were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.  The data is summarized in Table \ref{tbl:crosssummary}.
+
+\subsection{Data processing for progeny}
+
+\subsubsection{Graph construction}
+
+We built de Bruijn graph structures from the available Illumina data for each child with McCortex's \texttt{build} command, using a kmer size of $47$ bp and discarding bases with a Phred-scaled quality score\cite{Brockman:2008p231} less than $Q5$.  The "dirty" graph (raw graph structure before any pruning is applied) was cleaned using McCortex's \texttt{clean} command, allowing cleaning thresholds to be automatically computed and falling back to trimming contiguous regions of the graph with coverage less than $2$ in the event that automatic thresholds could not be calculated.  McCortex's contigs, while strictly speaking not used in our analysis, were still useful for quality control checks.  To generate contigs, paired-end reads were thread through the graph with the McCortex \texttt{thread} command and specifying a minimum fragment size of $0$ bp, maximum fragment size of $400$ bp, and the (more conservative) one-way gap-filling procedure.
+
+\subsection{Data processing for parents}
+
+\subsubsection{Graph construction}
+
+\begin{table}[b]
 \centering
 \caption{Additional data availability for all \textit{P. falciparum} cross parents}
 \label{tbl:reflist}
@@ -31,11 +52,15 @@ Illumina data      & x   & x   & x   & x   & x   & x   \\ \bottomrule
 \end{tabular}
 \end{table}
 
-In addition to the Illumina data for the parents, we often benefitted from the availability of supplementary draft assembly data from the Pf3k project.  These draft assemblies were constructed using the HGAP $2.0$ pipeline\cite{Chin:2013iw}, an assembler that follows the overlap-layout-consensus paradigm using exccedingly long reads from from PacBio RSII instruments (on average $10,000$ kb in length, sometimes as long as $50,000$ kb, two orders of magnitude longer than the reads used to assemble the finished 3D7 reference).  This data helps in determining parental paths in the graph near variants without ambiguity.  Table \ref{tbl:reflist} shows all additional data used in constructing parental assemblies.
+Constructing the parental graphs was a bit more involved than graphs for the children as there were often multiple data sources to incorporate.  For five out of the six parents, we benefitted from the availability of supplementary draft assembly data from the Pf3k project.  These draft assemblies were constructed using the HGAP $3.0$ pipeline\cite{Chin:2013iw}, an assembler that follows the overlap-layout-consensus paradigm\cite{Myers:1995vm} using exceedingly long reads from from PacBio RS II instruments (on average $10,000$ bp in length, sometimes as long as $50,000$ bp, two orders of magnitude longer than the reads used to assemble the finished 3D7 reference).  This data helps in determining parental paths in the graph near variants with fewer ambiguities.  Table \ref{tbl:reflist} shows all additional data used in constructing parental assemblies.
 
 Parental graph construction was performed on each parental data source separately following the same workflow used for the children's graphs.  The separate graphs were then combined into a single graph using McCortex's \texttt{join} command.
 
 For most samples, the finished or draft PacBio assemblies vastly outperform any assembly that could be produced with the Illumina data, and are an excellent basis for localizing events and determining their proximity to genes.  However, as there is no high-quality sequence of the $803$ genome, we were forced to construct one ourselves using the available Illumina data.  After producing the cleaned graph with the McCortex workflow, we applied the software's paired-end read threading and contig emission steps.  The assembly statistics for all six genomes are presented in Table \ref{tbl:refstats}.  The assembly for $803$ is exceedingly poor compared to the other assemblies, as expected from short Illumina reads.  That the total sequence length is more than $2.5$ times larger than a typical \textit{falciparum} parasite is almost certainly artifactual and will be discussed further below.
+
+\subsubsection{Transfer of gene models}
+
+We transferred gene models onto the new genomes by examining existing finished and draft reference genomes and their annotation sets, selecting each annotated exon sequence from its corresponding FASTA sequence file, and aligning it to the new genome using BWA.  For 7G8, GB4, and 803, we transferred only the 3D7 annotations obtained from PlasmoDB release $26$\cite{Aurrecoechea:2009hh}.  For DD2 and HB3, additional separate annotations exist from the Broad Institute\footnote{\url{http://www.broadinstitute.org/annotation/genome/plasmodium_falciparum_spp/}}.  These undoubtedly contain better representations of genes divergent from their 3D7 counterparts (particularly antigens).  However, owing to the poor DD2 and HB3 assemblies to which they are associated, the annotations are likely to be incomplete.  We therefore chose to transfer both the 3D7 and DD2 (HB3) annotations onto the new DD2 (HB3) assemblies.  This has resulted in a slight over-annotation of genes in these two genomes, as shown in Table \ref{tbl:refstats}.  This happens when the gene models slightly differ between 3D7 and the target (e.g. exon end definitions differ by as much as a single nucleotide), but refer to the same gene.  Rather than simply choosing one definition, we permit both to remain as the PlasmoDB annotations are continuously maintained and improved, while the Broad's annotations have not been updated since April $2014$.
 
 \begin{table}[]
 \centering
@@ -53,9 +78,9 @@ HB3 & 28      & 6,094      & 3,378,065  & 1,593,993 & 22,812,563     & 7,467 (3D
 \end{tabular}
 \end{table}
 
-We transferred gene models onto the new genomes by examining existing finished and draft reference genomes and their annotation sets, selecting each annotated exon sequnce from its corresponding FASTA sequence file, and aligning it to the new genome using BWA.  For 7G8, GB4, and 803, we transferred only the 3D7 annotations obtained from PlasmoDB release $26$\cite{Aurrecoechea:2009hh}.  For DD2 and HB3, additional separate annotations exist from the Broad Institute.  These undoubtedly contain better representations of genes divergent from their 3D7 counterparts (particularly antigens).  However, owing to the poor DD2 and HB3 assemblies to which they are associated, the annotations are likely to be incomplete.  We therefore chose to transfer both the 3D7 and DD2 (HB3) annotations onto the new DD2 (HB3) assemblies.  This has resulted in a slight over-annotation of genes in these two genomes, as shown in Table \ref{tbl:refstats}.  This happens when the gene models slightly differ between 3D7 and the target (e.g. exon end definitions differ by as much as a single nucleotide), but refer to the same gene.  Rather than simply choosing one definition, we permit both to remain as the PlasmoDB annotations are continuously maintained and improved, while the Broad's annotations have not been updated since April $2014$.
+\subsubsection{Generation of visualization resources}
 
-When producing visualizations with the Circos\cite{Krzywinski:2009ix} genomic comparison tool, we require alignments between the contigs of a parental genome and the chromosomes of the reference.  For 3D7, DD2, 7G8, GB4, and HB3, this is trivial as nearly the entirety of each chromosome has been successfully reconstructed.  For those genomes, we simply lined each assembled contig with its 3D7 counterpart.  In the case of 803, we aligned each contig to the 3D7 genome using BWA to derive the mapping.  
+We use the Circos\cite{Krzywinski:2009ix} genomic comparison tool to generate whole-genome views of DNM activity in a sample's genome or in all samples from a single cross.  To prepare these visualizations, we require alignments between the contigs of a parental genome and the chromosomes of the reference.  For 3D7, DD2, 7G8, GB4, and HB3, this is trivial as nearly the entirety of each chromosome has been successfully reconstructed.  For those genomes, we simply lined up each assembled contig with its 3D7 counterpart (at the resolution of the image, details of a true alignment cannot be discerned).  In the case of 803, we aligned each contig to the 3D7 genome using BWA to derive the mapping.  
 
 Finally, we computed a number of sequence composition and complexity metrics in tiled $2,500$ bp windows using the SeqComplex tool\footnote{https://github.com/caballero/SeqComplex}.  The full list of metrics computed is as follows:
 
@@ -65,61 +90,132 @@ Finally, we computed a number of sequence composition and complexity metrics in 
 \item at: AT content
 \item ats: AT skew (defined as $(A - T)/(A + T)$)
 \item cpg: CpG content
-\item ce: Complexity by Shannon entropy\cite{Shannon:1948iy}
-\item cl: Complexity by linguistic values\cite{Trifonov:1990vu}
-\item cwf: Complexity by Wootton and Federhen\cite{Wootton:1996tu}
-\item cz: Compression factor (the ratio of uncompressed to compressed sequence file size, using the \texttt{gzip} compression utility)
+\item ce: Sequence complexity by Shannon entropy\cite{Shannon:1948iy}
+\item cl: Sequence complexity by linguistic values\cite{Trifonov:1990vu}
+\item cwf: Sequence complexity by Wootton and Federhen\cite{Wootton:1996tu}
+\item cz: Sequence compression factor (the ratio of uncompressed to compressed sequence file size, using the \texttt{gzip} compression utility)
 \end{enumerate}
 
 These metrics were computed for each parental genome except 803, whose contig lengths were too variable to consistently satisfy the $2,500$ bp window requirement, making comparison with GB4 cumbersome.
 
 \subsection{Quality control}
-We examined assembly metrics on all of our samples in order to flag samples for downstream analysis rejection.  We examined each sample for outlier behavior per cross in the following metrics:
+We examined assembly metrics on all of our samples in order to flag samples for downstream analysis rejection.  We examined each sample for outlier behavior per cross in the number of unique kmers (total number of unique kmers in the graph after the automatic cleaning step - too few kmers indicate poor sequencing quality resulting in most data being thrown away) and contig N50 (the weighted median length of the contigs - very short contigs may indicate high sequencing error rate).  The number of samples retained for analysis is in Table \ref{tbl:crosssummary}.
 
-\begin{enumerate}
-\item number of unique kmers: the total number of unique kmers in the graph after the automatic cleaning step
-\item contig N50: the weighted median length of the contigs (very short contigs may indicate high sequencing error rate)
-\item total assembly length: the sum of all contigs produced (this should be reasonably close to the expected genome size)
-\end{enumerate}
+One expects that a newly assembled \textit{falciparum} parasite should have a similar assembly length to the $3D7$ reference sequence, or at least the other assembled parasites in this dataset.  While this is true for nearly all samples in the 3D7xHB3, HB3xDD2, and 7G8xGB4 crosses, many of the $803xGB4$ samples, shown in Figure \ref{fig:weirdnessAsmLength}, appear to defy this expectation.  Some (including the $803$ parental sample) exhibit assembly lengths well above the $23$ megabases we expect.  Several samples have assemblies in excess of $40$ megabases.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear, but contamination by an organism not present in the BLAST database is a plausible hypothesis.  We note that during investigation of this phenomenon, an update to our BLAST database revealed a number of kmers from \textit{Pseudomonas} genus that had previously been considered "novel".  The \textit{Pseudomonas} genus is a family of common environmental bacterium, one of the leading causes of opportunistic human infection\cite{Stover:2000dy}, around $6.7$ Mbp in length, and subject of drug resistance surveilence\cite{Winsor:2016ca} at many labs including the Wellcome Trust Sanger Institute, where our \textit{falciparum} samples were processed.
 
-The distributions for each of these metrics are shown in Figure \ref{fig:boxplotmetrics}.  We rejected samples that were outliers in at least two metrics (shown in red).
+For labs that routinely perform a lot of sequencing, it is common for samples from different projects to be prepared simultaneously, and/or for samples to be multiplexed to maximize the use of sequencer capacity, both of which can contribute to sample cross-contamination\cite{Jun:2012je}.  Assembly software does not typically employ contamination checks prior to assembly, instead simply processing any data provided to it.  It is likely that any such contamination would have been assembled and incorporated mostly as disconnected regions of the de Bruijn graph - a series of vertices that do not connect to any other part of the \textit{falciparum} genome.  This might serve to inflate the novel kmer count if the child sample is contaminated but the parents are not, but such regions are easily identified and discarded.  Therefore, we did not treat inflated assembly size to be a QC failure.
 
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=\textwidth]{showOutliers-1}
-  \caption{Boxplots of QC metrics}
-  \label{fig:boxplotmetrics}
+    \includegraphics[width=0.5\textwidth]{weirdnessAsmLength-1}
+  \caption{Number of kmers and assembly length in the 803xGB4 samples.  Vertical dashed lines indicate the mean value of the metric in other crosses.}
+  \label{fig:weirdnessAsmLength}
 \end{figure}
 
-One assumes that a newly assembled \textit{falciparum} parasite should have a similar assembly length to the $3D7$ reference sequence, or at least the other assembled parasites in this dataset.  Many of the $803xGB4$ samples appear to defy this expectation (including the $803$ parental sample), exhibiting assembly lengths well above the $23$ megabases we expected.  Several samples have much longer assemblies: $40$ megabases or more.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear.  It is possibly due to intraspecies sample contamination.  This would not be filtered out by our contamination checks, as those checks serve only to eliminate non-\textit{falciparum} kmers that might masquerade as novel kmers.  Despite this worry, we chose specifically not to exclude these samples from our analysis for two reasons: first, the issue affects a preponderance of 803xGB4 samples, including the parents; and second, our graph-based variant caller should hopefully be able to compensate for the issue.
+\subsection{Data processing for validation isolates}
 
-The final dataset after QC is shown in Table \ref{tbl:crosssummary}.  Sequencing date and QC status are shown in Figure \ref{fig:gantt}.
+We selected a number of samples for long-read sequencing on the PacBio RS II instrument.  As of this writing, two samples have been completed: PG0051-C (the 3D7 clone, useful for verifying assembly quality by comparison with the finished 3D7 reference), and PG0446-C (one of the 803xGB4 progeny).  The former was provided by Susana Campino of the Kwiatkowski lab at the Wellcome Trust Sanger Institute.  The latter was provided by Michael Krause and Rick Fairhurst at the Malaria Pathogenesis and Human Immunity Unit at the National Institute of Allergy and Infectious Disease.  Approximately $15~{\mu}g$ of high molecular weight gDNA was provided for each isolate to the CSHL Pacific Biosciences Sequencing Service\footnote{\url{http://cshl.edu/Research/PacBio.html}}.  Sequencing libraries with an average fragment size of $20$ kb were constructed for each sample and size-selected to remove fragments smaller than $7$ kb and larger than $20$ kb using BluePippin.  Optimal loading concentration was determined by choosing a wide range for each of the first $4$ SMRT cells and selecting the concentration that yielded the highest read yield for the remaining SMRT cells.  The PG0051-C isolate was sequenced in late 2014 with the P5-C3 chemistry and assembled with PacBio's HGAP $2.0$ software (assuming a genome size of $23$ megabases).  The PG0446-C isolate, run $16$ months later, was sequenced with the newer P6-C4 chemistry and HGAP $3.0$ software with the same genome size parameter.  Table \ref{tbl:asmstatspacbio} summarizes the sequencing and assembly results on these two isolates.
 
 \begin{table}[]
 \centering
-\caption{Summary of \textit{P. falciparum} cross data}
-\label{tbl:crosssummary}
-\begin{tabular}{@{}lllll@{}}
+\caption{Assembly statistics for PacBio RS II data on PG0051-C and PG0443-C isolates}
+\label{tbl:asmstatspacbio}
+\begin{tabular}{@{}lll@{}}
 \toprule
-                & 3D7xHB3       & HB3xDD2       & 7G8xGB4       & 803xGB4             \\ \midrule
-Samples         & $22$          & $42$          & $52$          & $36$                \\
-Samples QC+     & $21$          & $35$          & $49$          & $36$                \\
-Read length     & $76$          & $76$          & $76$          & $100$               \\
-Fragment size   & $300 \pm 29$  & $253 \pm 48$  & $293 \pm 21$  & $222 \pm 10$        \\
-Coverage        & $99  \pm 38$  & $121 \pm 91$  & $110 \pm 40$  & $205 \pm 106$       \\
-Platform        & Illumina GAII & Illumina GAII & Illumina GAII & Illumina HiSeq 2000 \\
-Sequencing Date & 2010          & 2009-2012     & 2010-2011     & 2014                \\ \bottomrule
+                        & PG0051-C (3D7)   & PG0443-C (36F11)   \\ \midrule
+Chemistry               & P5-C3            & P6-C4              \\
+SMRT cells              & $8$              & $9$                \\
+Number of reads         & $245,661$        & $282,459$          \\
+N50 read length         & $12,968$ bp      & $14,339$ bp        \\
+Assembler               & HGAP $2.0$       & HGAP $3.0$         \\
+Average contig coverage & $78$x            & $94$x              \\
+Polished contigs        & $34$             & $33$               \\ \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{landscape}
-  \begin{figure}[h!]
-    \centering
-      \includegraphics[width=\textwidth]{gantt-1}
-    \caption{Samples and their sequencing date.  QC failures are shown in red.}
-    \label{fig:gantt}
-  \end{figure}
-\end{landscape}
+\subsubsection{Establishing assembly quality}
+We examined genome recovery and access to massively repetitive sequence (subtelomeric and centromeric regions) that tend to be inaccessible with Illumina sequencing.  PacBio reads were aligned to the finished 3D7 genome using PacBio's \texttt{blasr} long read alignment tool\footnote{\url{https://github.com/PacificBiosciences/blasr}}, while Illumina reads were mapped with the \texttt{bwa mem} tool.  Two such regions in the Illumina and PacBio data for the PG0051-C isolate are shown in Figure \ref{fig:pacbioregions}.  It is evident that the PacBio coverage is roughly uniform across the entire length of the chromosome. In contrast, the Illumina coverage spikes and dips as it moves along, reaching zero coverage in many regions (especially the biologically interesting subtelomeric repetitive regions).
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{pacbioregions}
+  \caption{Coverage for Illumina data (orange) and PacBio data (red) of the same sample: PG0051-C (the reference isolate, 3D7).  a. Coverage over the chromosom $4$ centromere.  b. Coverage over the $5'$ telomere of chromosome $1$.  Genes from the \textit{var}, \textit{rifin}, and \textit{stevor} antigenic gene families are highlighted and identified with a "v", "r", or "s", respectively.}
+  \label{fig:pacbioregions}
+\end{figure}
+
+We compared the PacBio-produced assembly of the PG0051-C isolate to the finished reference sequence by performing an all-by-all (contigs versus chromosomes) alignmnt with MUMmer\cite{Versatileandopens:2004dy}.  The alignments are visualized as a multi-dotplot in Figure \ref{fig:dotplot3D7}, an extension of a dot plot that depicts alignments as two dimensional matricies with target and query sequences on the $x$ and $y$ axes, aligning regions of the two sequences shaded accordingly\cite{Gibbs:1970jf}.  Most chromosomes are assembled completely, and the overwhelming majority of the assembly appears on-diagonal (indicating successful one-to-one reconstruction).  Elements appearing off-diagonal could represent misassembly.  However, note that most of these off-diagonal elements occur towards the extremes of each chromosome.  Given that the reference genome was constructed with Sanger reads substantially shorter than the PacBio reads, it is possible some repetitive regions have been collapsed or misplaced, contributing to this nominal error rate.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.7\textwidth]{dotplot}
+  \caption{Alignment of contigs from PG0051-C to 3D7 reference assembly}
+  \label{fig:dotplot3D7}
+\end{figure}
+
+\begin{table}[]
+\centering
+\caption{Apparent errors per chromosome in the PG0051-C assembly}
+\label{tbl:asmerrors}
+\begin{tabular}{@{}llll@{}}
+\toprule
+              & SNP             & INS              & DEL            \\
+\midrule
+Pf3D7\_01\_v3 & $119~(0.02\%)$  & $763~(0.12\%)$   & $291~(0.05\%)$ \\
+Pf3D7\_02\_v3 & $164~(0.02\%)$  & $475~(0.05\%)$   & $162~(0.02\%)$ \\
+Pf3D7\_03\_v3 & $272~(0.03\%)$  & $523~(0.05\%)$   & $290~(0.03\%)$ \\
+Pf3D7\_04\_v3 & $141~(0.01\%)$  & $856~(0.07\%)$   & $713~(0.06\%)$ \\
+Pf3D7\_05\_v3 & $111~(0.01\%)$  & $531~(0.04\%)$   & $175~(0.01\%)$ \\
+Pf3D7\_06\_v3 & $504~(0.04\%)$  & $731~(0.05\%)$   & $180~(0.01\%)$ \\
+Pf3D7\_07\_v3 & $194~(0.01\%)$  & $609~(0.04\%)$   & $320~(0.02\%)$ \\
+Pf3D7\_08\_v3 & $134~(0.01\%)$  & $597~(0.04\%)$   & $251~(0.02\%)$ \\
+Pf3D7\_09\_v3 & $61~(0.00\%)$   & $713~(0.05\%)$   & $259~(0.02\%)$ \\
+Pf3D7\_10\_v3 & $732~(0.04\%)$  & $810~(0.05\%)$   & $308~(0.02\%)$ \\
+Pf3D7\_11\_v3 & $310~(0.02\%)$  & $1008~(0.05\%)$  & $459~(0.02\%)$ \\
+Pf3D7\_12\_v3 & $232~(0.01\%)$  & $1202~(0.05\%)$  & $390~(0.02\%)$ \\
+Pf3D7\_13\_v3 & $231~(0.01\%)$  & $1493~(0.05\%)$  & $409~(0.01\%)$ \\
+Pf3D7\_14\_v3 & $152~(0.00\%)$  & $1309~(0.04\%)$  & $396~(0.01\%)$ \\
+Total         & $3357~(0.03\%)$ & $11620~(0.10\%)$ & $4603~(0.04\%)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As we have sequenced DNA from the 3D7 parasite, any differences should likely reflect errors in the sequence. We therefore called SNPs between the two assemblies to find these errors. The sums are presented in Table \ref{tbl:asmerrors}, as well as the percent of bases per chromosome these errors represent.  Overall, the SNP, insertion, and deletion rates are exceedingly low: amounting to 19,580 events in a 23 megabase genome (0.17\%). The insertion rate is much higher than that of deletions and SNPs, perhaps due to the dominant insertion error mode of the PacBio sequencing instrument. All chromosomes appear reasonably similar in performance.
+
+We examined the recovery of the $62$ members of the \textit{var} gene family by aligning their full-length genomic sequences (exons and introns) to the PG0051-C assembly using \texttt{bwa mem}. All $62$ \textit{var} genes were successfully aligned to the assembly (all had mapping quality greater than $0$; only $1$ had mapping quality less than 60).  $21$ were found to map with $100\%$ identity. The remaining have, on average, $2.46$ mismatches, $1.39$ insertions, and $0.63$ deletions. The overwhelming majority of indels are a single nucleotide in length.
+
+It seemed likely that many of these errors occur in intronic regions where high repetitive sequence content might contribute to misassembly. We investigated this hypothesis by aligning the exons of the \textit{var} genes separately and enumerating errors observed in exons and introns. We ignored $11$ genes with poor exon alignments (i.e. with mapping quality less than $10$). $91.78\%$ of the errors are found in intronic regions. In all cases, exon $2$ of the \textit{var} gene (the short exon) is base-for-base perfect when compared to the canonical reference.
+
+Based on these measurements of the error rate, we estimate the quality of the PacBio assembly of the PG0051-C (3D7) isolate to be at least $Q32$.  We note that this is a pessimistic estimate, based on the assumption that any difference between this and the reference assembly indicate an error in our assembly.  In long, repetitive regions of the genome, this assumption may not be accurate.
+
+\subsubsection{Preparing the validation isolate}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{36F11dotplot}
+  \caption{Alignment of contigs from PG0443-C to 3D7 reference assembly}
+  \label{fig:valdotplot}
+\end{figure}
+
+Having established the performance of the instrument and assembler in providing a viable assembly for a \textit{P. falciparum} isolate, we turned our attention to the validation sample from the 803xGB4 cross, PG0446-C.  We aligned the isolate's assembly to the 3D7 reference sequence using MUMmer, shown in Figure \ref{fig:valdotplot}.  Note that compared to the PG0051-C isolate, the validation isolate has much more off-diagonal activity, particularly towards the telomeres.  This is to be expected.  While the core genome between isolates is expected to be relatively stable, tremendous immune pressure has forced the antigenic repertoire to diversify rapidly.  These genes, primarily located in the subtelomeric regions, are the regions that land off-diagonal, indicative of the extensive recombination and mutation history.
+
+We relabelled and reoriented each contig as necessary based on the alignment so as to more easily establish genomic positioning of events during analysis.  The assignments and orientation were further validated by transferring 3D7 gene model annotations onto the PG0446-C assembly by aligning each exon with \texttt{bwa mem}, operating under the assumption that the core genome is reasonably stable between isolates and that properly labelled and oriented contigs will yield exon alignments that match orientation and approximate positioning between the two assemblies.  Figure \ref{fig:loadGff} shows an example for chromosome $1$.  The vertical offset of all points is due to the fact that the assembly length of chromosome $1$ in the PG0446-C assembly is longer than the reference length.  Only exons towards the telomeric ends of the chromosome are misplaced, evidently originating from chromosomes other than chromosome $1$.  All other chromosom $1$ exons are aligned with the expected position and orientation.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{twochrs-1}
+  \caption{Placement and orientation of exons from the reference assembly mapped to the PG0446-C assembly.  Chromosomes $1$, $5$, and $9$ shown.}
+  \label{fig:loadGff}
+\end{figure}
+
+We verified sample identity by slicing the PacBio assembly into $1,000$ bp tiles (non-overlapping), aligning each tile to the 3D7 reference genome using \texttt{bwa mem}, and genotyping sites found to be variant in the MalariaGen 803xGB4 callset using the Genome Analysis Toolkit module, \texttt{UnifiedGenotyper} (specifying the genotype likelihood model to "SNP", ploidy to $1$, genotyping mode to "GENOTYPE\_GIVEN\_ALLELES", assuming default base quality scores should be $30$, and providing the 803xGB4 alleles from MalariaGen)\footnote{This procedure, while admittedly a bit indirect, provides vastly better results than genotyping the PacBio reads directly, as the reads still contain myriad errors after error correction and before assembly.  It is also much more straightforward than processing the MUMmer variant output, which uses a different file format to VCF, making comparisons cumbersome.}.  Chromosome $14$ is shown in Figure \ref{fig:showHaps}.  Note that while the PacBio sample's crossover pattern does appear to match that of PG0446-C, samples PG0445-C, PG0453-C, and PG0457-C also share the same pattern.  This common pattern is observed for these samples on all chromosomes.  These samples are almost certainly clones of one another.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{showHaps-14}
+  \caption{Haplotype mosaic for chromosome $14$ in the 803xGB4 cross dataset.  Parental samples are identified with asterisks.  For remaining samples, alleles are color-coded according to the parent from which they are apparently inherited - orange for mother (PG0443-C, the 803 isolate), blue for father (PG0050-CX2, the GB4 isolate).  Missing data (sites where no genotype could be ascertained) are shown in white.  Bottom axis represents variant number.  Top axis represents variant position along the length of the chromosome.}
+  \label{fig:showHaps}
+\end{figure}
+
 
 \subsection{Novel kmers}
 
@@ -163,7 +259,7 @@ We first examined DNM calls in a single sample from the $3D7xHB3$ cross: PG0063-
 \label{tbl:callsPG0063C}
 \begin{tabular}{@{}lllllll@{}}
 \toprule
-   & locus               & background &  event    &  closest gene                   &  product          &  within mask  \\
+       & locus               & background &  event    &  closest gene                   &  product          &  within mask  \\
 \midrule
 1      & 1:27733             & 3D7        &  unknown  &  PF3D7\_0100100                 &  PfEMP1 (var)     &  yes          \\
 2      & 1:29780             & 3D7        &  MNP      &  PF3D7\_0100100                 &  PfEMP1 (var)     &  yes          \\
