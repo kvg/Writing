@@ -26,7 +26,7 @@ Sequencing Date & 2010          & 2009-2012     & 2010-2011     & 2014          
 \end{tabular}
 \end{table}
 
-We obtained short-read, paired-end whole genome sequence data for parent and progeny clones of the $3D7xHB3$\cite{Walliker:1987cv}, $HB3xDD2$\cite{Wellems:1990eg}, $7G8xGB4$\cite{Hayton:2008hn}, and $803xGB4$ crosses, generously provided to us by the MalariaGen project\footnote{More information, including links to the European Nucleotide Archive where the original reads are stored, can be found at \url{http://www.malariagen.net/apps/pf-crosses/1.0/}.  Note that while the 803xGB4 data we were provided does come to us via MalariaGen, it was provided to them (and subsequently to us) as a personal communication from Michael Krause, Rick Fairhurst \textit{et al.} at the NIH.  It is not yet part of the public dataset.}.  All were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.  The data is summarized in Table \ref{tbl:crosssummary}.
+We obtained short-read, paired-end whole genome sequence data for parent and progeny clones of the $3D7xHB3$\cite{Walliker:1987cv}, $HB3xDD2$\cite{Wellems:1990eg}, $7G8xGB4$\cite{Hayton:2008hn}, and $803xGB4$ crosses, generously provided to us by the MalariaGen project\footnote{More information, including links to the European Nucleotide Archive where the original reads are stored, can be found at \url{http://www.malariagen.net/apps/pf-crosses/1.0/}.  Note that while the 803xGB4 data we were provided does come to us via MalariaGen, it was provided to them (and subsequently to us) as a personal communication from Michael Krause, Rick Fairhurst \textit{et al.} at the NIAID.  It is not yet part of the public dataset.}.  All were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.  The data is summarized in Table \ref{tbl:crosssummary}.
 
 \subsection{Data processing for progeny}
 
@@ -101,7 +101,7 @@ These metrics were computed for each parental genome except 803, whose contig le
 \subsection{Quality control}
 We examined assembly metrics on all of our samples in order to flag samples for downstream analysis rejection.  We examined each sample for outlier behavior per cross in the number of unique kmers (total number of unique kmers in the graph after the automatic cleaning step - too few kmers indicate poor sequencing quality resulting in most data being thrown away) and contig N50 (the weighted median length of the contigs - very short contigs may indicate high sequencing error rate).  The number of samples retained for analysis is in Table \ref{tbl:crosssummary}.
 
-One expects that a newly assembled \textit{falciparum} parasite should have a similar assembly length to the $3D7$ reference sequence, or at least the other assembled parasites in this dataset.  While this is true for nearly all samples in the 3D7xHB3, HB3xDD2, and 7G8xGB4 crosses, many of the $803xGB4$ samples, shown in Figure \ref{fig:weirdnessAsmLength}, appear to defy this expectation.  Some (including the $803$ parental sample) exhibit assembly lengths well above the $23$ megabases we expect.  Several samples have assemblies in excess of $40$ megabases.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear, but contamination by an organism not present in the BLAST database is a plausible hypothesis.  We note that during investigation of this phenomenon, an update to our BLAST database revealed a number of kmers from \textit{Pseudomonas} genus that had previously been considered "novel".  The \textit{Pseudomonas} genus is a family of common environmental bacterium, one of the leading causes of opportunistic human infection\cite{Stover:2000dy}, around $6.7$ Mbp in length, and subject of drug resistance surveilence\cite{Winsor:2016ca} at many labs including the Wellcome Trust Sanger Institute, where our \textit{falciparum} samples were processed.
+One expects that a newly assembled \textit{falciparum} parasite should have a similar assembly length to the $3D7$ reference sequence, or at least the other assembled parasites in this dataset.  While this is true for nearly all samples in the 3D7xHB3, HB3xDD2, and 7G8xGB4 crosses, many of the $803xGB4$ samples, shown in Figure \ref{fig:weirdnessAsmLength}, appear to defy this expectation.  Some (including the $803$ parental sample) exhibit assembly lengths well above the $23$ megabases we expect.  Several samples have assemblies in excess of $40$ megabases.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear, but contamination by an organism not present in the BLAST database is a plausible hypothesis.  We note that during investigation of this phenomenon, an update to our BLAST database revealed a number of kmers from the \textit{Pseudomonas} genus that had previously been considered "novel", as the kmers in question were not yet present in the database.  The \textit{Pseudomonas} genus is a family of common environmental bacterium, one of the leading causes of opportunistic human infection\cite{Stover:2000dy}, and around $6.7$ Mbp in length.  It is the subject of drug resistance surveilence\cite{Winsor:2016ca} at many labs including the Wellcome Trust Sanger Institute, where our \textit{falciparum} samples were processed.
 
 For labs that routinely perform a lot of sequencing, it is common for samples from different projects to be prepared simultaneously, and/or for samples to be multiplexed to maximize the use of sequencer capacity, both of which can contribute to sample cross-contamination\cite{Jun:2012je}.  Assembly software does not typically employ contamination checks prior to assembly, instead simply processing any data provided to it.  It is likely that any such contamination would have been assembled and incorporated mostly as disconnected regions of the de Bruijn graph - a series of vertices that do not connect to any other part of the \textit{falciparum} genome.  This might serve to inflate the novel kmer count if the child sample is contaminated but the parents are not, but such regions are easily identified and discarded.  Therefore, we did not treat inflated assembly size to be a QC failure.
 
@@ -139,7 +139,7 @@ We examined genome recovery and access to massively repetitive sequence (subtelo
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{pacbioregions}
-  \caption{Coverage for Illumina data (orange) and PacBio data (red) of the same sample: PG0051-C (the reference isolate, 3D7).  a. Coverage over the chromosom $4$ centromere.  b. Coverage over the $5'$ telomere of chromosome $1$.  Genes from the \textit{var}, \textit{rifin}, and \textit{stevor} antigenic gene families are highlighted and identified with a "v", "r", or "s", respectively.}
+  \caption{Coverage for Illumina data (orange) and PacBio data (red) of the same sample: PG0051-C (the reference isolate, 3D7).  a. Coverage over the chromosome $4$ centromere.  b. Coverage over the $5'$ telomere of chromosome $1$.  Genes from the \textit{var}, \textit{rifin}, and \textit{stevor} antigenic gene families are highlighted and identified with a "v", "r", or "s", respectively.}
   \label{fig:pacbioregions}
 \end{figure}
 
@@ -158,23 +158,23 @@ We compared the PacBio-produced assembly of the PG0051-C isolate to the finished
 \label{tbl:asmerrors}
 \begin{tabular}{@{}llll@{}}
 \toprule
-              & SNP             & INS              & DEL            \\
+              & SNP              & INS               & DEL              \\
 \midrule
-Pf3D7\_01\_v3 & $119~(0.02\%)$  & $763~(0.12\%)$   & $291~(0.05\%)$ \\
-Pf3D7\_02\_v3 & $164~(0.02\%)$  & $475~(0.05\%)$   & $162~(0.02\%)$ \\
-Pf3D7\_03\_v3 & $272~(0.03\%)$  & $523~(0.05\%)$   & $290~(0.03\%)$ \\
-Pf3D7\_04\_v3 & $141~(0.01\%)$  & $856~(0.07\%)$   & $713~(0.06\%)$ \\
-Pf3D7\_05\_v3 & $111~(0.01\%)$  & $531~(0.04\%)$   & $175~(0.01\%)$ \\
-Pf3D7\_06\_v3 & $504~(0.04\%)$  & $731~(0.05\%)$   & $180~(0.01\%)$ \\
-Pf3D7\_07\_v3 & $194~(0.01\%)$  & $609~(0.04\%)$   & $320~(0.02\%)$ \\
-Pf3D7\_08\_v3 & $134~(0.01\%)$  & $597~(0.04\%)$   & $251~(0.02\%)$ \\
-Pf3D7\_09\_v3 & $61~(0.00\%)$   & $713~(0.05\%)$   & $259~(0.02\%)$ \\
-Pf3D7\_10\_v3 & $732~(0.04\%)$  & $810~(0.05\%)$   & $308~(0.02\%)$ \\
-Pf3D7\_11\_v3 & $310~(0.02\%)$  & $1008~(0.05\%)$  & $459~(0.02\%)$ \\
-Pf3D7\_12\_v3 & $232~(0.01\%)$  & $1202~(0.05\%)$  & $390~(0.02\%)$ \\
-Pf3D7\_13\_v3 & $231~(0.01\%)$  & $1493~(0.05\%)$  & $409~(0.01\%)$ \\
-Pf3D7\_14\_v3 & $152~(0.00\%)$  & $1309~(0.04\%)$  & $396~(0.01\%)$ \\
-Total         & $3357~(0.03\%)$ & $11620~(0.10\%)$ & $4603~(0.04\%)$ \\
+Pf3D7\_01\_v3 & $119~(0.02\%)$   & $763~(0.12\%)$    & $291~(0.05\%)$   \\
+Pf3D7\_02\_v3 & $164~(0.02\%)$   & $475~(0.05\%)$    & $162~(0.02\%)$   \\
+Pf3D7\_03\_v3 & $272~(0.03\%)$   & $523~(0.05\%)$    & $290~(0.03\%)$   \\
+Pf3D7\_04\_v3 & $141~(0.01\%)$   & $856~(0.07\%)$    & $713~(0.06\%)$   \\
+Pf3D7\_05\_v3 & $111~(0.01\%)$   & $531~(0.04\%)$    & $175~(0.01\%)$   \\
+Pf3D7\_06\_v3 & $504~(0.04\%)$   & $731~(0.05\%)$    & $180~(0.01\%)$   \\
+Pf3D7\_07\_v3 & $194~(0.01\%)$   & $609~(0.04\%)$    & $320~(0.02\%)$   \\
+Pf3D7\_08\_v3 & $134~(0.01\%)$   & $597~(0.04\%)$    & $251~(0.02\%)$   \\
+Pf3D7\_09\_v3 & $61~(0.00\%)$    & $713~(0.05\%)$    & $259~(0.02\%)$   \\
+Pf3D7\_10\_v3 & $732~(0.04\%)$   & $810~(0.05\%)$    & $308~(0.02\%)$   \\
+Pf3D7\_11\_v3 & $310~(0.02\%)$   & $1,008~(0.05\%)$  & $459~(0.02\%)$   \\
+Pf3D7\_12\_v3 & $232~(0.01\%)$   & $1,202~(0.05\%)$  & $390~(0.02\%)$   \\
+Pf3D7\_13\_v3 & $231~(0.01\%)$   & $1,493~(0.05\%)$  & $409~(0.01\%)$   \\
+Pf3D7\_14\_v3 & $152~(0.00\%)$   & $1,309~(0.04\%)$  & $396~(0.01\%)$   \\
+Total         & $3,357~(0.03\%)$ & $11,620~(0.10\%)$ & $4,603~(0.04\%)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -185,9 +185,9 @@ We examined the recovery of the $62$ members of the \textit{var} gene family by 
 
 It seemed likely that many of these errors occur in intronic regions where high repetitive sequence content might contribute to misassembly. We investigated this hypothesis by aligning the exons of the \textit{var} genes separately and enumerating errors observed in exons and introns. We ignored $11$ genes with poor exon alignments (i.e. with mapping quality less than $10$). $91.78\%$ of the errors are found in intronic regions. In all cases, exon $2$ of the \textit{var} gene (the short exon) is base-for-base perfect when compared to the canonical reference.
 
-Based on these measurements of the error rate, we estimate the quality of the PacBio assembly of the PG0051-C (3D7) isolate to be at least $Q32$.  We note that this is a pessimistic estimate, based on the assumption that any difference between this and the reference assembly indicate an error in our assembly.  In long, repetitive regions of the genome, this assumption may not be accurate.
+Based on these measurements of the error rate, we estimate the quality of the PacBio assembly of the PG0051-C (3D7) isolate to be approximately $Q31$\footnote{$Q = -10{\log}_{10}(q) = -10{\log}_{10}((11,620 + 4,603 + 3,357)/23,332,831)$}, or less than one error per thousand bases.  We note that this is a pessimistic estimate, based on the assumption that any differences between this and the reference assembly indicate errors in our assembly.  In long, repetitive regions of the genome, this assumption may not be accurate.
 
-\subsubsection{Preparing the validation isolate}
+\subsubsection{Preparing the validation isolate reference}
 
 \begin{figure}[h!]
   \centering
@@ -198,7 +198,9 @@ Based on these measurements of the error rate, we estimate the quality of the Pa
 
 Having established the performance of the instrument and assembler in providing a viable assembly for a \textit{P. falciparum} isolate, we turned our attention to the validation sample from the 803xGB4 cross, PG0446-C.  We aligned the isolate's assembly to the 3D7 reference sequence using MUMmer, shown in Figure \ref{fig:valdotplot}.  Note that compared to the PG0051-C isolate, the validation isolate has much more off-diagonal activity, particularly towards the telomeres.  This is to be expected.  While the core genome between isolates is expected to be relatively stable, tremendous immune pressure has forced the antigenic repertoire to diversify rapidly.  These genes, primarily located in the subtelomeric regions, are the regions that land off-diagonal, indicative of the extensive recombination and mutation history.
 
-We relabelled and reoriented each contig as necessary based on the alignment so as to more easily establish genomic positioning of events during analysis.  The assignments and orientation were further validated by transferring 3D7 gene model annotations onto the PG0446-C assembly by aligning each exon with \texttt{bwa mem}, operating under the assumption that the core genome is reasonably stable between isolates and that properly labelled and oriented contigs will yield exon alignments that match orientation and approximate positioning between the two assemblies.  Figure \ref{fig:loadGff} shows an example for chromosome $1$.  The vertical offset of all points is due to the fact that the assembly length of chromosome $1$ in the PG0446-C assembly is longer than the reference length.  Only exons towards the telomeric ends of the chromosome are misplaced, evidently originating from chromosomes other than chromosome $1$.  All other chromosom $1$ exons are aligned with the expected position and orientation.
+We relabelled and reoriented each contig as necessary based on the alignment so as to more easily establish genomic positioning of events during analysis.  The assignments and orientation were further validated by transferring 3D7 gene model annotations onto the PG0446-C assembly by aligning each exon with \texttt{bwa mem}, operating under the assumption that the core genome is reasonably stable between isolates and that properly labelled and oriented contigs will yield exon alignments that match orientation and approximate positioning between the two assemblies.  Figure \ref{fig:loadGff} shows an example for chromosome $1$.  The vertical offset of all points is due to the fact that the assembly length of chromosome $1$ in the PG0446-C assembly is longer than the reference length.  Only exons towards the telomeric ends of the chromosome are misplaced, evidently originating from chromosomes other than chromosome $1$.  All other chromosome $1$ exons are aligned with the expected position and orientation.
+
+After chromosome identification, we observed a handful of contigs that could not be assigned a place in the nuclear genome.  After running each unplaced contig through BLAST, we discovered two long contigs (thousands of bp) and nearly perfect hits to various species in the \textit{Pseudomonas} genus.  Discovering this contamination in the PacBio assembly and the Illumina samples strongly suggests the samples are contaminated at the source, contributing to the inflated 803xGB4 assembly lengths.  We removed these contigs from our assembly.
 
 \begin{figure}[h!]
   \centering
@@ -207,7 +209,7 @@ We relabelled and reoriented each contig as necessary based on the alignment so 
   \label{fig:loadGff}
 \end{figure}
 
-We verified sample identity by slicing the PacBio assembly into $1,000$ bp tiles (non-overlapping), aligning each tile to the 3D7 reference genome using \texttt{bwa mem}, and genotyping sites found to be variant in the MalariaGen 803xGB4 callset using the Genome Analysis Toolkit module, \texttt{UnifiedGenotyper} (specifying the genotype likelihood model to "SNP", ploidy to $1$, genotyping mode to "GENOTYPE\_GIVEN\_ALLELES", assuming default base quality scores should be $30$, and providing the 803xGB4 alleles from MalariaGen)\footnote{This procedure, while admittedly a bit indirect, provides vastly better results than genotyping the PacBio reads directly, as the reads still contain myriad errors after error correction and before assembly.  It is also much more straightforward than processing the MUMmer variant output, which uses a different file format to VCF, making comparisons cumbersome.}.  Chromosome $14$ is shown in Figure \ref{fig:showHaps}.  Note that while the PacBio sample's crossover pattern does appear to match that of PG0446-C, samples PG0445-C, PG0453-C, and PG0457-C also share the same pattern.  This common pattern is observed for these samples on all chromosomes.  These samples are almost certainly clones of one another.
+We verified sample identity by slicing the PacBio assembly into $1,000$ bp tiles (non-overlapping), aligning each tile to the 3D7 reference genome using \texttt{bwa mem}, and genotyping sites found to be variant in the MalariaGen 803xGB4 callset using the Genome Analysis Toolkit module, \texttt{UnifiedGenotyper} (specifying the genotype likelihood model to "SNP", ploidy to $1$, genotyping mode to "GENOTYPE\_GIVEN\_ALLELES", assuming default base quality scores should be $Q30$, and providing the 803xGB4 alleles from MalariaGen)\footnote{This procedure, while admittedly a bit indirect, provides vastly better results than genotyping the PacBio reads directly.  The assembly contains far fewer errors than the reads, even after error correction.  It is also much more straightforward than processing the MUMmer variant output, which uses a different file format to VCF, making comparisons cumbersome.}.  Chromosome $14$ is shown in Figure \ref{fig:showHaps}.  Note that while the PacBio sample's crossover pattern does appear to match that of PG0446-C, samples PG0445-C, PG0453-C, and PG0457-C also share the same pattern.  This common pattern is observed for these samples on all chromosomes.  These samples are almost certainly clones of one another.
 
 \begin{figure}[h!]
   \centering
@@ -216,29 +218,61 @@ We verified sample identity by slicing the PacBio assembly into $1,000$ bp tiles
   \label{fig:showHaps}
 \end{figure}
 
+\section{Results}
 
 \subsection{Novel kmers}
 
-We identified novel kmers using the software we presented in Chapter \ref{ch:methods}, dividing the set into three subsets: "all" (no filtering applied), "confident" (kmer coverage thresholds automatically detected and applied), and "trusted" (potential contaminants removed).  The total number of such kmers is shown in Figure \ref{fig:novelty}a.
+As we have demonstrated that the PacBio assembly of the validation isolate is high-quality, novelty found in the Illumina dataset for the same sample can be verified by examining the PacBio isolate.  At the filtration levels of "all", "confident", and "trusted", initial processing of the Illumina data for 803xGB4 sample PG0446-C was found to have $28,904$; $17,069$; and $8,197$ novel kmers, respectively.  The PacBio assembly of the same sample recapitulates only $1,639$; $802$; and $48$ novel kmers, respectively.  The discrepancies can be largely attributed to three (not necessarily independent) factors: an over-aggressive lower threshold for coverage, no upper threshold, and significant data contamination.
+
+The first two points regarding coverage can be observed in Figure \ref{fig:covdists}a-c.  The leftmost panel shows a clear valley between the left end of the distribution (presumably sequencing errors, as they are so rarely observed in the dataset) and the first local maximum (likely real data).  In the middle panel, kmer coverage in PG0446-C decays more smoothly, and it is far less obvious as to where the lower threshold should be placed\footnote{It is worth mentioning that the PG0446-C sample, sequenced on more modern Illumina HiSeq 2000 platforms, likely enjoys a much lower sequencing error rate than the Illumina GAII used for PG0055-C, which contributes to our difficulty in automatically finding a reasonable coverage threshold.}.  In the rightmost panel, all novel kmers are shown, conditional to being present or absent in the PacBio assembly of the same sample.  Our automatically calulated threshold is clearly set too high, as it is slicing through the middle of the coverage distribution for novel kmers recapitulated by the PacBio dataset.
+
+Furthermore, the rightmost panel shows a number of coverage outliers in the set of novel kmers that are not present in the PacBio dataset.  While their source is not immediately apparent, it is clear they have a large contribution to the set of novel kmers we examine; $1,057$ kmers present in the Illumina dataset but absent in the PacBio dataset were found to be high coverage outliers.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{covdists}
+  \caption{a. Kmer coverage in a 3D7xHB3 sample, with calculated lower threshold shown in red.  b. Kmer coverage in the 803xGB4 sample, PG0446-C, with calculated lower threshold shown in red.  c. Kmer coverage distributions for all novel kmers in PG0446-C, conditional on the kmer being present or absent in the PacBio assembly.  Calculated lower threshold from panel b shown in red.}
+  \label{fig:covdists}
+\end{figure}
+
+We investigated other potentially erroneous novel kmers: putative novel kmers absent from the PacBio assembly and with coverage between $10x$ and $74x$.  We discovered many of these novel kmers exist in branches that either never connect with the graphs of the parents (we refer to these as "orphan" branches, Figure \ref{fig:orphans}a), or connect suspiciously amidst a number of putatively novel kmers rejected by the contamination checks (we refer to these as "bushy-tailed" branches, Figure \ref{fig:orphans}b).  Both appear to be symptoms of unrecognized contamination, owing to the fact that the BLAST database is not (and can never be) complete.  In attempting to remove any contribution to the graphs from non-target sources, it is insufficient to discard only the kmers that appear in the BLAST database.  Sequencing centers will always be sequencing new organisms, and the contents of the BLAST database will necessarily lag behind.  Discarding orphan branches is straightforward, but incompletely treats the problem; the bushy-tailed branches erroneously connect with the parental graphs and must be removed as well.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{orphans}
+  \caption{Local subgraphs in the Illumina data for PG0446-C near novel kmers that are absent in the corresponding PacBio assembly.  Red circles denote "trusted" novel kmers (those that passed our initial coverage and contamination checks).  Red crosses indicate "untrusted" novel kmers (those that passed our initial coverage check but failed the contamination check).  a. An "orphan" branch: a series of novel kmers not connected to the parental graphs.  b. A "bushy-tailed" branch: a series of novel kmers that appear to connect to everything, including the parental graphs, by chance.}
+  \label{fig:orphans}
+\end{figure}
+
+To resolve these issues, we implemented a filtering solution for novel kmers in three parts.  First, we implemented a manual procedure for specifying coverage limits, selecting a lower limit of $10x$ and an upper limit of $74x$.  Next, we implemented software to explore the trio graph starting at confident novel kmers rejected by the contamination filter using our condition-limited depth first search software.  Explored branches containing novel kmers that are on the same branch as rejected kmers are similarly tagged for rejection.  Finally, we explore the trio graph starting with remaining confident novel kmers.  If the explored subgraph does not connect with the parental graphs in any way, the kmers in the branch are marked for rejection and removed from the graph.  Any novel kmer surviving this battery of tests is considered "filtered".
+
+Application of these filters brings our apparent novel kmer count down from $28,924$ to $210$ accepted, $28,714$ rejected ($429$ rejected for coverage, $17,666$ for contamination, $10,619$ orphaned).  We compared these lists of accepted and rejected novel kmers to the PacBio data.  To mitigate errors in the assembly, we required that a "true positive novel kmer" be present in both the PacBio dataset and the Illumina data.  We found $48$ true positives and $162$ false positives.  Examining the rejected kmers, we found $28,691$ to be true negatives and $23$ false negatives.  Our computed sensitivity and specificity are $68\%$ and $99\%$, respectively.  All false negatives are due to low coverage; each kmer in question has coverage less than $3x$, and the vast majority have coverage of $1x$.  While some false-positives appear to be due to cryptic contamination that we have been unable to resolve, a handful manifest as seemingly heterozygous SNPs (Figure \ref{fig:fp}).  As the genome in question is haploid, such events can represent regions of elevated copy number and subsequent divergence of one of the copies, or it can represent cross-contamination between 803xGB4 samples.  The inability to rediscover these kmers in the PacBio dataset implies the latter.  It's possible that this event is actually segregating in the Illumina sample, but that the sample is a mixture of at least two parasites.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{fpcomp}
+  \caption{A false-positive event.  a. Local subgraph at the false-positive site, wherein the child's graph contains paths that traverse the series of novel kmers as well as the parental kmers.  b. IGV screenshot of the site showing reads and assembly information for the trio, aligned to the PacBio PG0466-C assembly.  Top panel: 803.  Middle two: GB4 reads and PacBio assembly (sliced to facilitate alignment).  Lower two: PG0446-C reads and contig containing the variant in question from the a. panel.}
+  \label{fig:fp}
+\end{figure}
+
+First, we identified novel kmers using the software we presented in Chapter \ref{ch:methods}, dividing the set into three subsets: "all" (no filtering applied), "confident" (kmer coverage thresholds automatically detected and applied), and "trusted" (potential contaminants removed).  The total number of such kmers is shown in Figure \ref{fig:novelty}a.
 
 The 3D7xHB3 cross has far more novel kmers than the other samples before any coverage and contamination filters are applied.  This may simply reflect the fact that the 3D7xHB3 samples were sequenced on early Illumina GAII sequencers and chemistry.  With the exception of a handful of HB3xDD2 samples, they are the oldest samples in the dataset, and perhaps have a much higher error rate to show for it.
 
-Furthermore, the 803xGB4 samples have consistent novel kmer behavior with the samples from other crosses, despite the assembly lengths being substantially longer than expectation.
+The 803xGB4 samples have consistent novel kmer behavior with the samples from other crosses, despite the concern regarding assembly lengths being substantially longer than expectation.
 
 \begin{figure}
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=\linewidth]{novelKmers-1}
-  %\caption{Confident and trusted novel kmers per sample}
   \label{fig:novelKmers-1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
   \includegraphics[width=\linewidth]{novelStretches-1}
-  %\caption{Ns vs nk}
   \label{fig:novelStretches-1}
 \end{subfigure}
-\caption{a. Number of novel kmers found in each sample, broken down into "trusted", "confident", and "all" categories.  b. Number of novel contigs (contigs containing at least one trusted novel kmer) per sample.}
+\caption{Left: number of novel kmers found in each sample, broken down into "trusted", "confident", and "all" categories.  Right: number of novel contigs (contigs containing at least one trusted novel kmer) per sample.}
 \label{fig:novelty}
 \end{figure}
 
