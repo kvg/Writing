@@ -1,8 +1,44 @@
 \chapter{Discussion}
 \label{ch:discussion}
 
-\section{Lit review}
-\subsection{Review of Kong et al., 2002}
+\newthought{A high-quality reference genome tremendously simplifies} genomic analysis and the subsequent communication of results.  A reference acts as a canonical description of a genome upon which a community of scientists can annotate useful information (coding regions
 
-Augustine Kong et al. discuss a new genetic map of recombination rates using genotyping information from $869$ individuals in 146 Icelandic families.  This is the first such map made after the sequencing of the human genome, and is thus able to leverage the new reference sequence in order to correctly order the genotyped markers.  It is a substantially higher-resolution map than provided by the former gold-standard, the Marshfield map.  The Marshfield map contained data on only $188$ meioses, whereas the Kong et al. map contained data on $1,257$.  The new map reveals marked differences in recombination rates between males and females (e.g. the recombination rate in female autosomes is a factor of $1.65$ higher than that observed in males) for reasons beyond sequence features.
+However, we have seen in this dissertation that the reference genome is not a panacea.  (how it makes life harder)
 
+%Furthermore, it is a curious irony that we should attempt to study how a child's genome differs from its closest relatives by first comparing it to an unrelated individual.  This solution is functional, provided the genomes in question have little divergence between them.  However, as soon as one attempts to study a region of the genome other than the core, the limitations of the solution become evident. ...
+%
+%Ideally, one would possess the ability to sequence any genome - progeny and progenitors - to infinitely high quality. ...  Barring that, we have shown that \textit{de novo} assembly of short read data is still a viable approach to de novo variant discovery, and avoids many of the aformentioned pitfalls.
+%
+%Upsides
+%
+%Variants are easier to identify
+%
+%Polymorphic variants are straightforward to find versus trying to align contigs
+%
+%Addressable downsides
+%
+%Hard to visualize
+%
+%Typically requires that one load the entire graph into memory to do any work
+%
+%Downsides
+%
+%The unfortunate aspect of graphs is that they are much Much MUCH more difficult to work with than a single reference sequence.  The reference genome for all of its flaws at least gets one thing right: the genome is *actually* linear.  The ideal genome graph is linear as well, but realistically, that is never going to happen with second-generation sequencing data.  Pruning helps build longer contigs, but eventually, you always run into a tangle that leads to some irrelevant part of the genome or different chromosome entirely.
+%
+%The non-linearity of the graph means its a lot more difficult to localize a variant in the genome.  
+%
+%
+%Notes on implementation
+%
+%Novel kmers as signposts and progress indicator
+%
+%Novel kmers have many functions.  First, they are beacons, indicating where in the graph to look for interesting de novo variation.  Second, they are sign posts.  Novel kmers surrounding a junction inform the traversal engine as to which branch to take in order to complete the variant paths.  Finally, they are mile markers, indicating how much further one need travel in order to complete the journey.
+%
+%Probabilistic graphs
+%
+%One interesting aspect of our approach is that it is the beginning of a probabilistic treatment of assembly graphs.  Assembly graphs are generally treated in a very binary way: a kmer is either an error or not; a contig either belongs in the graph or doesn't; navigation proceeds until it hits a junction, and makes no effort to traverse the boundary.  In contrast, we make a number of decisions that subvert this behavior.  Although we rely on McCortex and its error-cleaning algorithm for the actual construction of the de Bruijn graph data structure, we have implemented our code in such a way to allow for a kmer to be retreived from the dirty graph if it allows us to complete a traversal that otherwise could not occur.  In doing so, we recognize the fact that no error cleaning algorithm can ever be completely correct.  This is akin to having a quality score attached to each kmer.  Although many kmers might deserve a low quality score indicating their likelihood of being an error, some kmers clearly represent real data despite appearing erroneous at first glance.  We've implemented our system such that a dirty kmer can be incorporated into the traversal if a clean kmer is absent, but one could imagine a more probablistic treatment.
+%
+%And in fact, the traversal algorithm is already set up to permit a probabilistic treatment.  Dijkstra's shortest path algorithm attempts to find the shortest weight path, not necessarily the shortest number of kmers.  If all the weights are the same, these are one and the same.  However, weights could be easily incorporated into the algorithm, with higher weights indicating a lower quality.  If multiple paths from source to destination exist, the path with fewer dirty kmers will likely be chosen.  However, if the path utilizing the dirty kmers is the only path that can be found, they'll be used.  Although we intended to implement this functionality in our own code, we had difficulty finding clear examples in simulation where such traversal rules proved criticalto recovering variants.  Thus we simply stuck with the ad-hoc incorporation of dirty kmers when necessary.  In general, the mutation rate of P. falciparum appears to be too low and the read coverage too high to make adequate use of this feature.  In lower coverage data and/or data with a higher mutation rate, it's likely this would be a useful feature.
+%
+%Additionally, our traveral algorithm is one step removed from a probabilistic approach.  Typically, one declines to traverse beyond a junction in a graph as there is a danger of emitting a contig that does not occur in the genome, but rather links two disparate regions of the graph through a shared homologous region.  Instead, the novel kmers allow us to make an informed guess as to which branch to navigate, since we have observed that novel kmers resulting from de novo mutations occur in bunches, rather than as isolated events.  We can get away with this because de novo mutation rates are so low that two adjacent novel kmers are overwhelmingly likely to be related to one another.
+%

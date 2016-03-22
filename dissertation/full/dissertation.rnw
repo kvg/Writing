@@ -24,6 +24,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \usepackage[noend]{algpseudocode}
 \usepackage[font=normal,labelfont=bf]{caption}
 \usepackage[superscript]{cite}
+\usepackage[toc,page]{appendix}
 \renewcommand{\citedash}{--}
 
 \RequirePackage[osf,sc]{mathpazo}
@@ -55,7 +56,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
   \mathrel{-}       % minus as a relation
 }
 
-\graphicspath{{../motivation/figure/}{../detection/figure/}{../simulation/figure/}{../pf/figure/}{../chimp/figure/}}
+\graphicspath{{../motivation/figure/}{../detection/figure/}{../simulation/figure/}{../pf/figure/}{../chimp/figure/}{../discussion/figure/}}
 
 % =============
 % Configuration
@@ -99,9 +100,12 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \input{../background/background.tex}
 \input{../simulation/simulation.tex}
 \input{../detection/detection.tex}
+\input{../realdata/realdata.tex}
 \input{../pf/pf.tex}
-\input{../chimp/chimp.tex}
+%\input{../chimp/chimp.tex}
 \input{../discussion/discussion.tex}
+
+
 
 %now enable appendix numbering format and include any appendices
 %\appendix
