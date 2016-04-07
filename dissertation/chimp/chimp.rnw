@@ -4,19 +4,21 @@
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.7\textwidth]{pedigree}
-  \caption{The three-generation chimpanzee pedigree.  The highlighted quintet is discussed in this chapter.}
+  \caption{The three-generation chimpanzee pedigree.  The highlighted quintet is discussed in this chapter.  Average read coverage shown in parentheticals.}
   \label{fig:pedigree}
 \end{figure}
 
-Finally, we present our work on a second dataset: a quintet taken from a three-generation, nine member pedigree of West African chimpanzees (\textit{Pan troglodytes verus}).  The processed samples are highlighted in Figure \ref{fig:pedigree}.  Venn {et al.} have previously examined this pedigree using reference-based methods for \textit{de novo} variation discovery, reporting a substantial paternal age effect to the overall mutation rate\cite{Venn:2014ep}.
+Finally, we briefly explore our software's technical limitations by touching on a second, previously analyzed dataset: a quintet taken from a three-generation, nine member pedigree of West African chimpanzees (\textit{Pan troglodytes verus}).  The processed samples are highlighted in Figure \ref{fig:pedigree}.  Venn {et al.} sequenced and examined this pedigree using reference-based methods for \textit{de novo} variation discovery, reporting a substantial paternal age effect to the overall mutation rate\cite{Venn:2014ep}.
 
-In many ways, the chimpanzee quartet is a more challenging dataset to process than the \textit{falciparum} crosses.  First, the genome is roughly two orders of magnitude larger; \textit{Plasmodium falciparum} is approximately $23$ Mbp, while \textit{Pan troglodytes} is $3,300$ Mbp ($3.3$ Gbp).  Second, the genome is diploid rather than haploid, an additional challenge during variant detection as now our software must contend with the presence of heterozygotes.  Third, we do not have draft-quality parental assemblies, and owing to the genome size, it is prohibitively expensive to generate such data as we did in the previous chapter.  We will be forced to rely solely on the Illumina data for the parents and children.  Fourth, the chimpanzee reference genome is reported to be of lesser quality than the \textit{falciparum} reference, misassemblies in which can contribute to false positive variant calls\cite{Mallick:2009go}.  The chimpanzee assembly process employed a whole-genome shotgun sequencing approach yielding $5x$ coverage and $37,846$ supercontigs that were aligned to the human reference build to reconstruct the autosomes and sex chromosomes\cite{ChimpanzeeSequencingandAnalysisConsortium:2005fa}.  The \textit{falciparum} employed a whole-chromosome shotgun approach yielding approximately $14x$ coverage per chromosome.  With myriad errors in the chimpanzee reference sequence, a method unbiased towards the reference sequence should prove quite useful.  Finally, the coverage is substantially lower: $57x$ on average for the founders, $28x$ on average for the children, or one-half and one-third the coverage we had for samples in the previous chapter.
+In many ways, the chimpanzee quintet is a more computationally challenging dataset to process than the \textit{falciparum} crosses.  First, the genome is roughly two orders of magnitude larger; \textit{Plasmodium falciparum} is approximately $23$ Mbp, while \textit{Pan troglodytes} is $3,300$ Mbp ($3.3$ Gbp).  Second, the genome is diploid rather than haploid, an additional challenge during variant detection as now our software must contend with the presence of heterozygotes.  Third, we do not have draft-quality parental assemblies, and owing to the genome size, it is prohibitively expensive to generate such data.  We will be forced to rely solely on the Illumina data for the parents and children.  Fourth, the chimpanzee reference genome is reported to be of substantially lesser quality than the \textit{P. falciparum} reference, riddled with misassemblies and ambiguous sequence which can contribute to false negative and false positive variant calls\cite{Mallick:2009go}.  The chimpanzee assembly process employed a whole-genome shotgun sequencing approach yielding $5x$ coverage and $37,846$ supercontigs that were aligned to the human reference build to reconstruct the autosomes and sex chromosomes\cite{ChimpanzeeSequencingandAnalysisConsortium:2005fa}.  The \textit{falciparum} employed a whole-chromosome shotgun approach yielding approximately $14x$ coverage per chromosome.  With myriad gaps and errors in the chimpanzee reference sequence, a method unbiased towards the reference sequence should prove quite useful.  Finally, the coverage is substantially lower: $57x$ on average for the founders, $28x$ on average for the children, or one-half and one-third the coverage we had for samples in the previous chapter.
 
 For precisely these reasons, the chimpanzee dataset is an important test-bed for our \textit{de novo} mutation calling software.  It permits a demonstration of our capacity to process much larger genomes than the \textit{falciparum} parasite.  Moreover, the problematic chimpanzee reference sequence and infeasibility of generating draft reference assemblies for the parents or children allow us to demonstrate the value of an approach that can leverage both, but requires neither.
 
 \section{Data processing}
 
 \subsection{Initial data}
+
+We obtained the raw genomic sequencing data for the nine members of the pedigree.  For simplicity, we chose to focus our efforts on three children in the $F_1$ generation: Dennis, Ruud, and Marlies.  Their parents, Marco and Pearl, were sequenced to higher coverage.  This should give us greater confidence in our ability to distinguish novel kmers, kmers present in the child but absent from the parents, from those only absent from the parental genomes due to issues with sequencing.  The quintet is summarized in Table \ref{tbl:pedstats}.  All samples were sequenced on Illumina HiSeq $2000$ platforms using $100$ bp reads.
 
 \begin{table}[]
 \centering
@@ -25,22 +27,17 @@ For precisely these reasons, the chimpanzee dataset is an important test-bed for
 \begin{tabular}{@{}llllll@{}}
 \toprule
                                        & Marco           & Pearl           & Dennis         & Ruud            & Marlies         \\ \midrule
-Platform                               & \multicolumn{5}{c}{Illumina HiSeq 2000}                                                \\
-Read length (bp)                       & \multicolumn{5}{c}{$100$}                                                              \\
 Fragment size (bp)                     & $369 \pm 23$    & $399 \pm 31$    & $377 \pm 24$   & $415 \pm 27$    & $383 \pm 28$    \\
-Coverage                               & $60 \pm 10$     & $54 \pm 8$      & $35 \pm 6$     & $22 \pm 3$      & $29 \pm 5$      \\
+Coverage                               & $63 \pm 10$     & $57 \pm 8$      & $35 \pm 6$     & $22 \pm 3$      & $31 \pm 5$      \\
 Cleaning threshold                     & $10$            & $9$             & $8$            & $4$             & $6$             \\
 Kmers                                  &                 &                 &                &                 &                 \\
 \multicolumn{1}{r}{\textit{dirty}}     & $7.7e9$         & $9.0e9$         & $5.9e9$        & $4.4e9$         & $5.2e9$         \\
 \multicolumn{1}{r}{\textit{clean}}     & $2.6e9$         & $2.7e9$         & $2.5e9$        & $2.7e9$         & $2.6e9$         \\
 Novel kmers                            &                 &                 &                &                 &                 \\
-\multicolumn{1}{r}{\textit{initial}}   & -               & -               &                & $348,374$       & $121,834$       \\
-\multicolumn{1}{r}{\textit{confident}} & -               & -               &                & $1,474$         & $2,197$         \\
-\multicolumn{1}{r}{\textit{trusted}}   & -               & -               &                & $600$           & $1,034$         \\ \bottomrule
+\multicolumn{1}{r}{\textit{initial}}   & -               & -               & $126,536$      & $348,374$       & $121,834$       \\
+\multicolumn{1}{r}{\textit{final}}     & -               & -               & $33,535$       & $30,794$        & $20,923$        \\ \bottomrule
 \end{tabular}
 \end{table}
-
-We obtained the raw genomic sequencing data for the nine members of the pedigree.  For simplicity, we chose to focus our efforts on three children in the $F_1$ generation: Dennis, Ruud, and Marlies.  Their parents, Marco and Pearl, were sequenced to higher coverage.  This should give us greater confidence in our ability to distinguish novel kmers, kmers present in the child but absent from the parents, from those only absent from the parental genomes due to issues with sequencing.  The quintet is summarized in Table \ref{tbl:pedstats}.
 
 \subsection{Sample processing}
 
@@ -48,11 +45,33 @@ Precisely as we did for the \textit{P. falciparum} samples in the previous chapt
 
 \subsection{Novel kmers}
 
-We produced a list of novel kmers per child in the manner described in Chapter \ref{ch:methods}, selecting kmers present in the child but absent in the parents ("initial" in Table \ref{tbl:pedstats}), then applying coverage thresholds ("confident") and non-chimpanzee contamination checks ("trusted") to the resulting list\footnote{Examining the results of the contamination check, it is evident that some samples contain small numbers of kmers that BLAST identifies as coming from human (hundreds) or gorilla (dozens).  Given the evolutionary relationships between the three species, it is perhaps not unreasonable to allow these kmers into the analysis, as they may misattributed in the BLAST database.  Instead, we have opted to remain conservative and exclude these from consideration.}.
+We produced a list of novel kmers per child in the manner described in Chapter \ref{ch:methods}, selecting kmers present in the child but absent in the parents ("initial" in Table \ref{tbl:pedstats}), then applying our filters described in Chapter \ref{ch:realdata} for coverage (set at $5x$ in this dataset), non-chimpanzee contamination\footnote{Examining the results of the contamination check, it is evident that some samples contain small numbers of kmers that BLAST identifies as coming from human (hundreds) or gorilla (dozens).  Given the evolutionary relationships between the three species, it is perhaps not unreasonable to allow these kmers into the analysis, as they may misattributed in the BLAST database.  Instead, we have opted to remain conservative and exclude these from consideration.}, orphan removal and over-cleaning detection.
+
+\subsection{Additional filters for low-coverage data}
+
+Given the excessively large number of novel kmers in the final sets (an order of magnitude larger than what we might expect assuming $50$ \textit{de novo} SNPs per sample, each generating $47$ novel kmers), we were concerned that the lower read depth on these samples could contribute to false positives \textit{de novo} mutations.  Lower coverage and the presence of heterozygotes (which will halve the coverage seen on each allele) should make it substantially more difficult for the McCortex software to automatically determine a suitable coverage threhold for kmers arising from sequencing error versus true genomic data.  This may result in evidence against a putative mutation being discarded.  Inspection of subgraphs associated with novel kmers revealed a number of kmers that had been erroneously and incompletely cleaned.
+
+An example SNV found in the pedigree founders, Pearl and Marco, and F1 progeny, Ruud, is shown in Figure \ref{fig:missingnovelkmersandtable}.  At first glance, this image seems to depict an $A/C$ heterozygote on the haplotypic background of the mother.  This is evident from the child's path (red) branching off from the mother and father (green and blue, respectively) at the top of the image and rejoining $47$ kmers later towards the bottom of the figure.  A child's path can also be seen tracking along the parental path between the two junctions, implying heterozygote status.  However, two elements of this plot are suspicious.  First, paternal edges are present outside the junctions, but absent within.  Second, many of the kmers in the alternate branch are not novel (as indicated by the grey circles rather than red).  Closer examination of each kmer in the alternate branch (we have highlighted one for clarity) reveals that while the parental edges $G$ and $A$ are absent in the dirty graph, they are absent in the clean graph.  By chance, two kmers had zero coverage in both the clean and dirty graphs, leading to the false-positive call.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\textwidth]{missingnovelkmersandtable}
+  \caption{A putative and suspicious \textit{de novo} SNP with very few novel kmers (filled red circles), and many non-novel kmers (filled grey circles) along the alternate branch.  An example kmer is highlighted; its coverage (c), incoming edges (i), and outgoing edges (o) are shown in the inset table.}
+  \label{fig:missingnovelkmersandtable}
+\end{figure}
+
+%Gaps in the chimpanzee reference assembly may contribute to this peculiar behavior.  Figure \ref{fig:refhole} depicts read coverage in the aforementioned pedigree founders and F1 progeny.  The SNV depicted in the graph visualization above is shown to the left of this figure, while the assembly gap can be seen to the right.  Reads overlapping the gap may not align properly to this locus.  Additional variation on the same read proximate to the gap may not align at all, resulting in an allele-specific coverage drop out in the alignment data.
+%
+%\begin{figure}[h!]
+%  \centering
+%    \includegraphics[width=0.9\textwidth]{refhole}
+%  \caption{Read coverage near the aberrant \textit{de novo} SNV and a reference assembly gap in chimpanzee pedigree founders, Pearl and Marco (top and middle tracks, respectively) and F1 progeny, Ruud (bottom track).}
+%  \label{fig:refhole}
+%\end{figure}
+
+To guard against these false calls, we required that no kmer in the alternate branch have edges present in the parental colors of the dirty graph but absent in the clean graph.  Effectively, the absense of an edge is only to be trusted if it is never observed in the raw data.
 
 \section{\textit{De novo} mutations in the \textit{P. troglodytes} dataset}
 
-\subsection{\textit{De novo} mutations in a single sample}
-\subsection{\textit{De novo} mutations in all progeny}
-\subsubsection{Mutational spectrum}
-\subsubsection{Comparison to published calls}
+\subsection{Mutational spectrum}
+\subsection{Comparison to published calls}
