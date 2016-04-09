@@ -73,5 +73,3 @@ To guard against these false calls, we required that no kmer in the alternate br
 
 \section{\textit{De novo} mutations in the \textit{P. troglodytes} dataset}
 
-\subsection{Mutational spectrum}
-\subsection{Comparison to published calls}

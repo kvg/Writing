@@ -1,9 +1,18 @@
 \chapter{Background}
 \label{ch:background}
 
-\newthought{Many mechanisms contribute to the production of} \textit{de novo} mutations in a genome.  In \textit{Plasmodium falciparum}, these mutations can occur at various stages in the parasite's lifecycle.  It is thus important to review this lifecycle so that we might better understand the mechanisms that contribute to the \textit{de novo} mutation landscape and how each of these mutations may manifest in genomic sequence data.
+\section{Introduction}
+
+\newthought{Many mechanisms contribute to the generation of} \textit{de novo} mutations in a genome.  In \textit{Plasmodium falciparum}, these mutations can occur at various stages in the parasite's lifecycle.  We begin this chapter with a brief review of the parasite's lifecycle so that we might better understand when various mutational mechanisms apply.  We follow this with an overview of the mutational mechanisms themselves, and how their products may manifest in genomic sequence data.
 
 \section{Lifecycle of the \textit{P. falciparum} parasite}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\textwidth]{lifecycle}
+  \caption{Lifecycle of parasites from the \textit{Plasmodium} genus.  Reprinted from the CDC's public domain Public Health Image Library (PHIL), image \#3405.}
+  \label{fig:lifecycle}
+\end{figure}
 
 \textit{Plasmodium falciparum} is a protozoan pathogen with a complex life cycle spanning several stages in (limited) vertebrate and mosquito hosts.  We shall review these stages and their constituent components in turn.
 
@@ -13,8 +22,7 @@ Vertebrate infection by \textit{P. falciparum} begins when a pregnant, infected 
 
 Inside the \textbf{parasitophorous vacuole} (a cytoplasm-filled protective envelope, "PV") produced by the sporozoite upon invasion of the hepatocyte, the parasite is protected from the phagolysosomes of the Kupffer cell and can begin asexual reproduction\cite{Lingelbach:1998us}.  The sporozoites undergo schizogonic development wherein the sporozoite produces many copies of its nucleus in preparation for multiple fission.  Upon cell segmentation, the parasite cells differentiate into \textbf{merozoites}, the next invasion stage of the \textit{falciparum} parasite.
 
-Th liver stage takes between $6$ and $8$ days\cite{Bousema:2014cy} to complete, producing thousands of haploid merozoites per parasetimized hepatocyte\cite{Prudencio:2006ho}.  This stage ends when the merozoites exit the hepatocytes and return to the bloodstream (presumably via physical rupture of the host cell).  
-
+The liver stage takes between $6$ and $8$ days\cite{Bousema:2014cy} to complete, producing thousands of haploid merozoites per parasetimized hepatocyte\cite{Prudencio:2006ho}.  This stage ends when the merozoites exit the hepatocytes and return to the bloodstream (presumably via physical rupture of the host cell).  
 \subsection{Blood stage}
 
 Newly released merozoites are non-motile; they come into contact with erythrocytes during transit in the bloodstream.  As erythrocytes are non-nucleated, thus lacking MHC I and II molecules, they make for an effective hiding place from the adaptive immune system\cite{Murphy:2011vw}.  Merozoites invade the RBCs quickly, within $60$ to $120$ seconds of their egress from hepatocytes\cite{Cowman:2006eu,Wright:2014ii} (presumably this speed is to minimize its exposure to immunological attack).  A merozoite once again forms a PV after invasion in order to create a more hospital development environment for itself.  This is followed by a repeating cycle of asexual reproduction.  The intra-erythrocytic development cycle progresses through three stages: \textbf{ring} (immature trophozoite, named for its morphology under microscopy), \textbf{trophozoite} (the merozoite after shedding its surface coat and invasion organelles in its apical complex), and \textbf{schizont} (a multi-nucleated cell resulting from multiple fission and just prior to cell segmentation)\cite{Josling:2015js}.  Eventually the schizont ruptures, releasing $16$ to $32$ merozoites into the bloodstream which can then quickly infect more erythrocytes.  This process takes $24$ to $48$ hours.
