@@ -112,7 +112,7 @@
 \author{Kiran V Garimella}
 \college{Green Templeton College}
 \degree{Doctor of Philosophy}
-\degreedate{Michaelmas 2015}
+\degreedate{Hilary 2016}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 
@@ -140,9 +140,6 @@
 % ========
 % Chapters
 % ========
-%\include{chapter1}
-%\include{chapter2}
-%\include{conclusions}
 \input{../motivation/motivation.tex}
 \input{../background/background.tex}
 \input{../simulation/simulation.tex}
@@ -152,13 +149,6 @@
 \input{../chimp/chimp.tex}
 \input{../discussion/discussion.tex}
 
-
-
-%now enable appendix numbering format and include any appendices
-%\appendix
-%\include{appendix1}
-%\include{appendix2}
-
 % ============
 % Bibliography
 % ============
@@ -166,5 +156,12 @@
 \renewcommand{\bibname}{References}
 \bibliography{/Users/kiran/Documents/allpapers}
 \bibliographystyle{unsrt}
+
+% ==========
+% Appendices
+% ==========
+\begin{appendices}
+\input{../pfscreenshots/pfscreenshots.tex}
+\end{appendices}
 
 \end{document}

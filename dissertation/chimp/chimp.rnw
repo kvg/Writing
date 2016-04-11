@@ -1,4 +1,4 @@
-\chapter{\textit{Pan troglodytes verus}}
+\chapter{\textit{De novo} mutations in \textit{Pan troglodytes verus}}
 \label{ch:chimp}
 
 \begin{figure}[h!]

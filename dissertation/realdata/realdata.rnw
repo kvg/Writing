@@ -1,16 +1,9 @@
-\chapter{\textit{Validation}}
+\chapter{Validation}
 \label{ch:realdata}
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=0.9\textwidth]{pfpedigree}
-  \caption{Relationships for samples in four \textit{P. falciparum} crosses, with the number of QC-passing Illumina datasets for progeny shown.  Green and orange shading indicates the availability of finished and draft quality reference genomes, respectively.  Orange stripes denote the availability of a draft reference genome for a single progeny, used as validation for \textit{de novo} events.  Gender assignments for the parents are arbitrary, intended only to simplify discussion.}
-  \label{fig:pfpedigree}
-\end{figure}
 
 \section{Introduction}
 
-\newthought{Real data tends to carry more surprises} than even the most sophisticated simulation software can reveal.  While the simulation framework we presented in Chapter \ref{ch:simulation} was useful to establish the basic operations of the graphical variant calling algorithm in ideal and realistic situations, true validation data is required to establish filters, traversal parameters, and other necessary parameters for treating real data.  In this chapter, we discuss validation data obtained for this purpose and the insights gleaned by comparing an initial set of calls to this dataset.
+\newthought{Real data tends to carry more surprises} than even the most sophisticated simulation software can reveal.  While the simulation framework we presented in Chapter \ref{ch:simulation} was useful to establish the basic operations and performance of the graphical variant calling algorithm presented in Chapter \ref{ch:methods}, true validation data is useful in establishing filters, traversal parameters, and other parameters for treating real data.  In this chapter, we discuss validation data obtained for this purpose and the insights gleaned by comparing an initial set of calls to this dataset.
 
 \subsection{Data processing for validation isolates}
 
@@ -48,7 +41,7 @@ We compared the PacBio-produced assembly of the PG0051-C isolate to the finished
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.7\textwidth]{dotplot}
-  \caption{Alignment of contigs from PG0051-C to 3D7 reference assembly}
+  \caption{Alignment of contigs from PG0051-C to 3D7 reference assembly, with sequences from reference and draft assembly on the x and y-axis, respectively.  Each contig from the draft assembly is represented by a line segment terminated at either end with circles.  Red denotes forward alignment of contigs to the reference, blue denotes reverse alignment.}
   \label{fig:dotplot3D7}
 \end{figure}
 

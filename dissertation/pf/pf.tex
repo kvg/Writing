@@ -1,7 +1,16 @@
-\chapter{\textit{Plasmodium falciparum}}
+\chapter{\textit{De novo} mutations in \textit{Plasmodium falciparum}}
 \label{ch:pf}
 
-No comprehensive catalog of \textit{de novo} variation in these crosses currently exists.  To date, the focus on the $3D7xHB3$, $HB3xDD2$, $7G8xGB4$ and $803xGB4$ datasets has primarily been on discovering the genomic basis for phenotypic differences between the parents, and on characterizing novel antigenic forms in the children.  However, the previous phenotypic studies have verified the presence of some large structural \textit{de novo} variants - namely a handful of NAHR events involving antigenic genes.  These known events serve as useful validation data for the most difficult form of variation for our software to detect.  Furthermore, these previously observed events have occurred in low-complexity regions.  These regions may confound DNA repair machinery and provide a substrate for the generation of \textit{de novo} variation.  They are typically considered outside the reach of reference-based analyses (which constrain themselves to the roughly $20$ megabases of so-called "core" genome wherein divergence between multiple isolates is much lower and short reads tend to align unambiguously\cite{Miles:2015in}), but may be accessible with our graph-based approach.  Finally, the \textit{P. falciparum} genome is small enough to be sequenced inexpensively on current third generation sequencing platforms, enabling high-quality reconstructions of the parental genomes and even one of the progeny.  The parental samples facilitate DNM discovery, while the child sample serves as a validation dataset with which to evaluate our performance.  These factors make the \textit{P. falciparum} datasets a compelling study target.
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\textwidth]{pfpedigree}
+  \caption{Relationships for samples in four \textit{P. falciparum} crosses, with the number of QC-passing Illumina datasets for progeny shown.  Green and orange shading indicates the availability of finished and draft quality reference genomes, respectively.  Orange stripes denote the availability of a draft reference genome for a single progeny, used as validation for \textit{de novo} events.  Gender assignments for the parents are arbitrary, intended only to simplify discussion.}
+  \label{fig:pfpedigree}
+\end{figure}
+
+\section{Introduction}
+
+\newthought{No comprehensive catalog of \textit{de novo} variation} in the \textit{P. falciparum} crosses currently exists.  To date, the focus on the 3D7xHB3, HB3xDD2, 7G8xGB4 and 803xGB4 datasets has primarily been on discovering the genomic basis for phenotypic differences between the parents, and on characterizing novel antigenic forms in the children.  However, the previous phenotypic studies have verified the presence of some large structural \textit{de novo} variants - namely a handful of NAHR events involving antigenic genes.  These known events serve as useful validation data for the most difficult form of variation for our software to detect.  Furthermore, these previously observed events have occurred in low-complexity regions.  These regions may confound DNA repair machinery and provide a substrate for the generation of \textit{de novo} variation via polymerase slippage\cite{Kloosterman:2015cn}.  They are typically considered outside the reach of reference-based analyses (which constrain themselves to the roughly $20$ megabases of so-called "core" genome wherein divergence between multiple isolates is much lower and short reads tend to align unambiguously\cite{Miles:2015in}), but may be accessible with our graph-based approach.  Finally, the \textit{P. falciparum} genome is small enough to be sequenced inexpensively on current third generation sequencing platforms, enabling high-quality reconstructions of the parental genomes and even one of the progeny.  The parental samples facilitate DNM discovery, while the child sample serves as a validation dataset with which to evaluate our performance.  These factors make the \textit{P. falciparum} datasets a compelling study target.
 
 \section{Data processing}
 
@@ -13,18 +22,18 @@ No comprehensive catalog of \textit{de novo} variation in these crosses currentl
 \label{tbl:crosssummary}
 \begin{tabular}{@{}lllll@{}}
 \toprule
-                & 3D7xHB3       & HB3xDD2       & 7G8xGB4       & 803xGB4             \\ \midrule
-Samples         & $22$          & $42$          & $52$          & $36$                \\
-Samples QC+     & $21$          & $35$          & $49$          & $36$                \\
-Read length     & $76$          & $76$          & $76$          & $100$               \\
-Fragment size   & $300 \pm 29$  & $253 \pm 48$  & $293 \pm 21$  & $222 \pm 10$        \\
-Coverage        & $99  \pm 38$  & $121 \pm 91$  & $110 \pm 40$  & $205 \pm 106$       \\
-Platform        & Illumina GAII & Illumina GAII & Illumina GAII & Illumina HiSeq 2000 \\
-Sequencing Date & 2010          & 2009-2012     & 2010-2011     & 2014                \\ \bottomrule
+                   & 3D7xHB3       & HB3xDD2       & 7G8xGB4       & 803xGB4             \\ \midrule
+Samples            & $22$          & $42$          & $52$          & $36$                \\
+Samples QC+        & $21$          & $35$          & $49$          & $36$                \\
+Read length (bp)   & $76$          & $76$          & $76$          & $100$               \\
+Fragment size (bp) & $300 \pm 29$  & $253 \pm 48$  & $293 \pm 21$  & $222 \pm 10$        \\
+Coverage           & $99  \pm 38$  & $121 \pm 91$  & $110 \pm 40$  & $205 \pm 106$       \\
+Platform           & Illumina GAII & Illumina GAII & Illumina GAII & Illumina HiSeq 2000 \\
+Sequencing Date    & 2010          & 2009-2012     & 2010-2011     & 2014                \\ \bottomrule
 \end{tabular}
 \end{table}
 
-We obtained short-read, paired-end whole genome sequence data for parent and progeny clones of the $3D7xHB3$\cite{Walliker:1987cv}, $HB3xDD2$\cite{Wellems:1990eg}, $7G8xGB4$\cite{Hayton:2008hn}, and $803xGB4$ crosses, generously provided to us by the MalariaGen project\footnote{More information, including links to the European Nucleotide Archive where the original reads are stored, can be found at \url{http://www.malariagen.net/apps/pf-crosses/1.0/}.  Note that while the 803xGB4 data we were provided does come to us via MalariaGen, it was provided to them (and subsequently to us) as a personal communication from Michael Krause, Rick Fairhurst \textit{et al.} at the NIAID.  It is not yet part of the public dataset.}.  All samples were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Avoiding PCR during library construction also removes the issue of replication errors that occur in early cycles being propagated to all subsequent copies, thus masquerading as \textit{de novo} mutations.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.  The data is summarized in Table \ref{tbl:crosssummary}.
+We obtained short-read, paired-end whole genome sequence data for parent and progeny clones of the 3D7xHB3\cite{Walliker:1987cv}, HB3xDD2\cite{Wellems:1990eg}, 7G8xGB4\cite{Hayton:2008hn}, and 803xGB4 crosses, generously provided to us by the MalariaGen project\footnote{More information, including links to the European Nucleotide Archive where the original reads are stored, can be found at \url{http://www.malariagen.net/apps/pf-crosses/1.0/}.  Note that while the 803xGB4 data we were provided does come to us via MalariaGen, it was provided to them (and subsequently to us) as a personal communication from Michael Krause, Rick Fairhurst \textit{et al.} at the NIAID.  It is not yet part of the public dataset.}.  All samples were sequenced on Illumina platforms over the past five years using a PCR-free library preparation protocol known to reduce coverage biases associated with AT-rich templates.  Avoiding PCR during library construction also removes the issue of replication errors that occur in early cycles being propagated to all subsequent copies, thus masquerading as \textit{de novo} mutations.  Across all four crosses, we obtained $152$ samples prior to any quality control checks.  The data is summarized in Table \ref{tbl:crosssummary} and depicted in Figure \ref{fig:pfpedigree}.
 
 \subsection{Data processing for progeny}
 
@@ -50,11 +59,11 @@ Illumina data      & x   & x   & x   & x   & x   & x   \\ \bottomrule
 \end{tabular}
 \end{table}
 
-Constructing the parental graphs was a bit more involved than graphs for the children as there were often additional data sources to incorporate.  For five out of the six parents, we benefitted from the availability of supplementary draft assembly data from the Pf3k project.  These draft assemblies were constructed using version $3.0$ of the Hierarchical Genome Assembly Process (HGAP$3$)\cite{Chin:2013iw}.  Briefly, the pipeline performs error correction via the \texttt{Quiver} module, which aligns two-thirds of the data to the longest third, emitting the consensus base and recomputed quality score at each position.  The corrected data is then assembled with a modified version of the Celera assembler\cite{Myers:1995vm}, an overlap-layout-consensus (OLC) assembler originally designed for use on long Sanger reads.  While such reads were typically $500$ bp in length, read lengths from PacBio RS II instruments are on average $10,000$ to $14,000$ bp in length, sometimes as long as $50,000$ bp, two orders of magnitude longer than the reads used to assemble the finished 3D7 reference.  This data helps in determining parental paths in the graph near variants with fewer ambiguities than Illumina data.  Table \ref{tbl:reflist} shows all additional data used in constructing parental assemblies.
+Constructing the parental graphs was a bit more involved than graphs for the children as there were often additional data sources to incorporate.  For five out of the six parents, we benefitted from the availability of supplementary draft assembly data from the Pf3k project.  These draft assemblies were constructed using version $3.0$ of the Hierarchical Genome Assembly Process (HGAP$3$)\cite{Chin:2013iw}.  Briefly, the pipeline performs error correction via the \texttt{Quiver} module, which aligns two-thirds of the data to the longest third, emitting the consensus base and recomputed quality score at each position.  The corrected data is then assembled with a modified version of the Celera assembler\cite{Myers:1995vm}, an overlap-layout-consensus (OLC) assembler originally designed for use on long Sanger reads.  While such reads were typically $500$ bp in length, read lengths from PacBio RS II instruments are on average $10,000$ to $14,000$ bp in length, sometimes as long as $50,000$ bp, two orders of magnitude longer than the reads used to assemble the finished 3D7 reference.  Well-assembled long-read data should contain vastly fewer ambiguities than graphs produced from Illumina data, leading to fewer junctions that confound traversal in the resulting graphs.  At variant bubbles, the PacBio data should assist in more easily determining a path from source to target, allowing us to type the variant properly.  Table \ref{tbl:reflist} shows all additional data used in constructing parental assemblies.
 
 Parental graph construction was performed on each parental data source separately following the same workflow used for the children's graphs.  The separate graphs were then combined into a single graph using McCortex's \texttt{join} command.
 
-For most samples, the finished or draft PacBio assemblies vastly outperform any assembly that could be produced with the Illumina data, and are an excellent basis for localizing events and determining their proximity to genes.  However, as there is no high-quality sequence of the $803$ genome, we were forced to construct one ourselves using the available Illumina data.  After producing the cleaned graph with the McCortex workflow, we applied the software's paired-end read threading and contig emission steps.  The assembly statistics for all six genomes are presented in Table \ref{tbl:refstats}.  The assembly for $803$ is exceedingly poor compared to the other assemblies, as expected from short Illumina reads.  That the total sequence length is more than $2.5$ times larger than a typical \textit{falciparum} parasite is artifactual and discussed further below.
+For most samples, the finished or draft PacBio assemblies vastly outperform any assembly that could be produced with the Illumina data, and are an excellent basis for localizing events and determining their proximity to genes.  However, as there is no high-quality sequence of the $803$ genome, we were forced to construct one ourselves using the available Illumina data.  After producing the cleaned graph with the McCortex workflow, we applied the software's paired-end read threading and contig emission steps.  The assembly statistics for all six genomes are presented in Table \ref{tbl:refstats}.  The assembly for $803$ is exceedingly poor compared to the other assemblies, as expected from short Illumina reads.  That the total sequence length is more than $2.5$ times larger than a typical \textit{P. falciparum} parasite is artifactual and discussed further below.  These results are unchanged when graphs are constructed with a different algorithm (SGA\cite{Simpson:2010fd}) instead.
 
 \subsubsection{Transfer of gene models}
 
@@ -97,11 +106,11 @@ Finally, we computed a number of sequence composition and complexity metrics in 
 These metrics were computed for each parental genome except 803, whose contig lengths were too variable to consistently satisfy the $2,500$ bp window requirement, making comparison with GB4 cumbersome.
 
 \subsection{Quality control}
-We examined assembly metrics on all of our samples in order to flag samples for downstream analysis rejection.  We examined each sample for outlier behavior per cross in the number of unique kmers (total number of unique kmers in the graph after the automatic cleaning step - too few kmers indicate poor sequencing quality resulting in most data being thrown away) and contig N50 (the weighted median length of the contigs - very short contigs may indicate high sequencing error rate).  The number of samples retained for analysis is in Table \ref{tbl:crosssummary}.
+We examined assembly metrics on all of our samples in order to flag low-quality samples for downstream analysis.  We examined each sample for outlier behavior per cross in the number of unique kmers (total number of unique kmers in the graph after the automatic cleaning step - too few kmers indicate poor sequencing quality resulting in most data being thrown away) and contig N50 (the weighted median length of the contigs - very short contigs may indicate high sequencing error rate).  The number of samples retained for analysis is in Table \ref{tbl:crosssummary}.
 
-One expects that a newly assembled \textit{falciparum} parasite should have a similar assembly length to the $3D7$ reference sequence, or at least the other assembled parasites in this dataset.  While this is true for nearly all samples in the 3D7xHB3, HB3xDD2, and 7G8xGB4 crosses, many of the $803xGB4$ samples, shown in Figure \ref{fig:weirdnessAsmLength}, appear to defy this expectation.  Some (including the $803$ parental sample) exhibit assembly lengths well above the $23$ megabases we expect.  Several samples have assemblies in excess of $40$ megabases.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear, but contamination by an organism not present in the BLAST database is a plausible hypothesis.  We note that during investigation of this phenomenon, an update to our BLAST database revealed a number of kmers from the \textit{Pseudomonas} genus that had previously been considered "novel", as the kmers in question were not yet present in the database.  The \textit{Pseudomonas} genus is a family of common environmental bacterium, one of the leading causes of opportunistic human infection\cite{Stover:2000dy}, and around $6.7$ Mbp in length.  It is the subject of drug resistance surveilence\cite{Winsor:2016ca} at many labs including the Wellcome Trust Sanger Institute, where our \textit{falciparum} samples were processed.
+One expects that a newly assembled \textit{P. falciparum} parasite should have a similar assembly length to the 3D7 reference sequence, or at least the other assembled parasites in this dataset.  While this is true for nearly all samples in the 3D7xHB3, HB3xDD2, and 7G8xGB4 crosses, many of the 803xGB4 samples, shown in Figure \ref{fig:weirdnessAsmLength}, appear to defy this expectation.  Some (including the 803 parental sample) exhibit assembly lengths well above the $23$ megabases we expect.  Several samples have assemblies in excess of $40$ megabases.  This outcome is unchanged even when other assembly software (e.g. SGA) is applied.  The source of this excess sequence is unclear, but contamination by an organism not present in the BLAST database is a plausible hypothesis.  We note that during investigation of this phenomenon, an update to our BLAST database revealed a number of kmers from the \textit{Pseudomonas} genus that had previously been considered "novel", as the kmers in question were not yet present in the database.  The \textit{Pseudomonas} genus is a family of common environmental bacterium, one of the leading causes of opportunistic human infection\cite{Stover:2000dy}, and around $6.7$ Mbp in length.  It is the subject of drug resistance surveilence\cite{Winsor:2016ca} at many labs including the Wellcome Trust Sanger Institute, where our \textit{P. falciparum} samples were processed.
 
-For labs that routinely perform a lot of sequencing, it is common for samples from different projects to be prepared simultaneously, and/or for samples to be multiplexed to maximize the use of sequencer capacity, both of which can contribute to sample cross-contamination\cite{Jun:2012je}.  Assembly software does not typically employ contamination checks prior to assembly, instead simply processing any data provided to it.  It is likely that any such contamination would have been assembled and incorporated mostly as disconnected regions of the de Bruijn graph - a series of vertices that do not connect to any other part of the \textit{falciparum} genome.  This might serve to inflate the novel kmer count if the child sample is contaminated but the parents are not, but such regions are easily identified and discarded.  Therefore, we did not treat inflated assembly size to be a QC failure.
+For labs that routinely perform a lot of sequencing, it is common for samples from different projects to be prepared simultaneously, and/or for samples to be multiplexed to maximize the use of sequencer capacity, both of which can contribute to sample cross-contamination\cite{Jun:2012je}.  Assembly software does not typically employ contamination checks prior to assembly, instead simply processing any data provided to it.  It is likely that any such contamination would have been assembled and incorporated mostly as disconnected regions of the de Bruijn graph - a series of vertices that do not connect to any other part of the \textit{P. falciparum} genome.  This might serve to inflate the novel kmer count if the child sample is contaminated but the parents are not, but such regions are easily identified and discarded.  Therefore, we did not treat inflated assembly size to be a QC failure.
 
 \begin{figure}[h!]
   \centering
@@ -110,12 +119,11 @@ For labs that routinely perform a lot of sequencing, it is common for samples fr
   \label{fig:weirdnessAsmLength}
 \end{figure}
 
-
 \section{\textit{De novo} mutations in a single 3D7xHB3 sample}
 
 \subsection{List of mutations}
 
-A single validation sample is limited in its ability to inform us on the efficacy of the graphical variant calling approach, particularly as it apparently lacks an NAHR or other complex event for us to inspect.  We thus turned our attention to a single sample from the $3D7xHB3$ cross: PG0063-C.  This sample is known to harbor an NAHR event between two \textit{var} genes: $PF3D7\_0100100$ (situated in the 5' subtelomere of chromosome $1$), and $PF3D7\_0223500$ (the 3' subtelomere of chromosome $2$).  Their validated presence in PG0063-C makes this sample a particularly useful test sample for examination.
+A single validation sample is limited in its ability to inform us on the efficacy of the graphical variant calling approach, particularly as it apparently lacks an NAHR or other complex event for us to inspect.  We thus turned our attention to a single sample from the 3D7xHB3 cross: PG0063-C.  This sample is known to harbor an NAHR event between two \textit{var} genes: $PF3D7\_0100100$ (situated in the 5' subtelomere of chromosome $1$), and $PF3D7\_0223500$ (the 3' subtelomere of chromosome $2$).  Their validated presence in PG0063-C makes this sample a particularly useful test sample for examination.
 
 Applying our novel kmer identification software (and the new filters described above), we identified $314$ novel kmers corresponding to $77$ putative events.  Post-calling filtration brought this list down to $7$ events, described in Table \ref{tbl:callsPG0063C}.  These events are annotated with the locus, the haplotypic background of the variant, variant type, closest gene (and the associated product), and whether the variant falls within the MalariaGen variant calling exclusion mask.  The variants can be seen in their genomic context in Figure \ref{fig:circosPG0063C}.  
 
@@ -151,11 +159,11 @@ Applying our novel kmer identification software (and the new filters described a
   \label{fig:circosPG0063C}
 \end{figure}
 
-There are several noteworthy features of Table \ref{tbl:callsPG0063C} and Figure \ref{fig:circosPG0063C}.  First, we discover a variety of event types, including SNPs (depicted in the plot with large circles), indels (triangles), multi-nucleotide polymorphisms (squares), and NAHR events (diamonds).  Few events could not be typed (small circles).
+There are several noteworthy features of Table \ref{tbl:callsPG0063C} and Figure \ref{fig:circosPG0063C}.  First, we discover a variety of event types, including SNPs (depicted in the plot with large circles), indels (triangles), multi-nucleotide polymorphisms (squares), and NAHR events (diamonds).  A few events could not be typed (small circles).
 
 Second, we are able to localize all mutational events within the parental genomes, even if the precise nature of the event could not be ascertained.  Here, we benefit from aligning the parental sequences rather than the child's sequence or short $76$ bp reads.  The parental sequences are often be longer than a read length, and should obviously match the parental genomes more closely.  This provides the alignment software more context and less variation with which to determine an appropriate home for the mutation.
 
-Third, we are able to identify interchromosomal exchanges, including the known NAHR event between PF3D7\_0100100 on the 5' end of chromosome $1$ and PF3D7\_0223500 on the 3' end of chromosome $2$\cite{Anonymous:2013hi}.  Curiously, there is another apparent interchromosomal exchange involving these two \textit{var} genes and one on chromosomes $8$.  No such recombination is reported in the literature, and the event is supported by a very short contig aligned to chromosome $8$ ($< 50$ bp).  While it is conceivable that the NAHR machinery may switch templates to potentially involve content from a third chromosome, it is more plausible that the recombination process gave rise to a short region of low-complexity sequence that happens to occur elsewhere in the genome.
+Third, we are able to identify interchromosomal exchanges, including the known NAHR event between $PF3D7\_0100100$ on the 5' end of chromosome $1$ and $PF3D7\_0223500$ on the 3' end of chromosome $2$\cite{Anonymous:2013hi}.  Curiously, there is another apparent interchromosomal exchange involving these two \textit{var} genes and one on chromosomes $8$.  No such recombination is reported in the literature, and the event is supported by a very short contig aligned to chromosome $8$ ($< 50$ bp).  While it is conceivable that the NAHR machinery may switch templates to potentially involve content from a third chromosome, it is more plausible that the recombination process gave rise to a short region of low-complexity sequence that happens to occur elsewhere in the genome.
 
 Fourth, we are able to detect mutations that occur in regions of the reference genome typically ignored in reference-based analyses.  MalariaGen delibrately excluded a number of regions from processing, including repetitive regions (often telomeric, centromeric, or pericentromeric regions) as short reads could often not be aligned in long repetitive regions with confidence.  It also excluded hypervariable regions (typically subtelomeric) as population diversity was too high to yield confident results in the reference-based analysis.  As we are comparing each sample to a parental graph rather than a reference sequence that is an undetermined number of generations removed, our graphical approach can reconstruct and localize these events.
 
@@ -167,7 +175,7 @@ Subtelomeric regions (and the antigenic genes contained within) are known to be 
 
 \subsection{Manual examination of all \textit{de novo} mutations}
 
-To establish the veracity of these calls, we manually examined all events in Table \ref{tbl:callsPG0063C} in IGV and our custom graph viewing software.
+To establish the veracity of these calls, we manually examined all events in Table \ref{tbl:callsPG0063C} in IGV and our custom graph viewing software.  The screenshots and graph visualizations are presented in Appendix \ref{ch:pfscreenshots}.
 
 \subsubsection{Event $1$ (a-h): NAHR}
 
@@ -175,77 +183,21 @@ The first event in Table \ref{tbl:callsPG0063C} appears to be an NAHR event.  Un
 
 The first three variants ($1a-c$: a SNP and two MNPs), are depicted in Figure \ref{fig:event1a-c}.  Upon initial inspection, it is not immediatley obvious that the child's reads are sampled from the maternal or paternal haplotypes at all.  Many apparent variants from the HB3 parent are not present in the child.  Several loci appear to be polymorphic.  It is tempting to conclude that the results are indicative of sequencing error or myriad mutational events sustained in mitosis.  However, given the repetitive nature of the locus, the presence of ambiguously aligned reads (shown in translucent colors), and reads with several mismatches, it is more likely that many reads sampled from similar haplotypes are simply misaligned to the sole copy in the reference sequence.
 
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{event1a-c}
-  \caption{IGV screenshot of SNP and two MNPs: three apparent \textit{de novo} mutations within a much larger NAHR event.  Top panel: 3D7 parent.  Middle panel: HB3 parent.  Lower panel: PG0063-C child.  Variant positions are shown as red blocks at the top of the three panels below the genome position track.  Stacked barplots above variant positions indicate the proportion of bases supporting an alternate allele to the reference.}
-  \label{fig:event1a-c}
-\end{sidewaysfigure}
-
 The local subgraph for these events, shown in Figure \ref{fig:event1a-cgraph}, exhibits a complicated structure containing several tendrils to homologous (but irrelevant) regions of the genome.  Despite this complexity, two bubble motifs (drawn with thicker lines) can clearly be observed, encapsulating the first SNP/MNP\footnote{As these events are separated by less than a kmer length, they present as a single bubble.} and second MNP.  Inspection of individual vertices in the event reveals all kmers to be of nominal coverage ($> 40x$), and the subgraph itself is devoid of any suspicious kmers (contaminants, exceedingly low-coverage sequence, or dirty kmers) that would be suggestive of error.
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{{event1a-c.graph}.pdf}
-  \caption{IGV screenshot of SNP and two MNPs: three apparent \textit{de novo} mutations within a much larger NAHR event.  Top panel: 3D7 parent.  Middle panel: HB3 parent.  Lower panel: PG0063-C child.  Variant positions are shown as red blocks at the top of the three panels below the genome position track.  Stacked barplots above variant positions indicate the proportion of bases supporting an alternate allele to the reference.}
-  \label{fig:event1a-cgraph}
-\end{figure}
 
 The next four events capture the NAHR event itself and are displayed in Figure \ref{fig:event1d-h}.  The graphical view shows a very simple structure, unmarred by indications of sequencing error.  Starting from the upper right, the child and 3D7 assemblies track along chromosome $1$ until the child's assembly forks off, apparently passing through a few kmers from chromosome $8$, rejoining at chromosome $2$.  Meanwhile, the 3D7 genome continues to track along chromosome $1$ until it rejoins a region of the child's assembly (towards the bottom of the image).  Here, 3D7 and the child fork again, with the child's assembly connecting again to chromosome $2$.  The IGV panels show the reads aligned to these regions of the 3D7 reference genome.  In the $b$ panel (shoing the $5'$ end of chromosome $1$, the reads appear to be sampled largely from the 3D7 parent until an abrupt change midway through the track (denoted by the red bar).  Similarly, the $c$ panel shows a region on chromosome $2$ that supports the 3D7 haplotype over a window substantially longer than a read length ($300$ bp).
 
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{event1d-h}
-  \caption{A NAHR event.  a. Graphical view of the exchange; chromosome of origin specified for various regions.  b. IGV screenshot for 3D7 (top), HB3 (middle), and PG0063-C (child) on the chromosome $1$ region of the event.  c. IGV screenshot of the chromosome $2$ region of the event.}
-  \label{fig:event1d-h}
-\end{sidewaysfigure}
-
 The last mutation seemingly associated with the NAHR event is a single SNP; the context is shown in Figure \ref{fig:funnysnp}.  A naive analysis would not assign \textit{de novo} status to such an event as there appears to be some evidence for this allele in the HB3 parent.  However, the left and right sections of the HB3 reads flanking the putative variant exhibit an extraordinary number of mismatches and are clipped off in the alignment.  A small number of reads have mapping quality $0$, indicating that the aligner had no confidence in their placement.  While the 3D7 parent and the child are covered over this region to $> 150x$, the HB3 sample is only covered to $20x$, with many apparent holes in the coverage across the $200$ bp region shown.  Finally, the child's alignments are very clean across this region: no mismatches, no clipped reads, and consistent coverage.  It is likely that the HB3 alignments are in error - a homologous region from another \textit{var} gene have landed here because the proper haplotype is not represented in the reference.  Our graphical method detects the mutation on the correct haplotypic background and calls it accordingly.
 
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{funnysnp}
-  \caption{A \textit{de novo} SNP in a \textit{var} on the 3D7 haplotypic background.  Top panel: 3D7.  Middle: HB3.  Lower: PG0063-C child.}
-  \label{fig:funnysnp}
-\end{sidewaysfigure}
-
 \subsubsection{Event $2$: unknown}
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{tangle}
-  \caption{A graph "tangle": a region of the graph where the in/out degree of vertices within a small radius sharply increases, resulting from attempting to traverse a low-complexity region of the genome.}
-  \label{fig:tangle}
-\end{figure}
 
 Event $2$ is an unknown event, seemingly localized to the $5'$ telomere of chromosome $2$.  However, examination of the subgraph (Figure \ref{fig:tangle} reveals the event in question likely stems from a graphical "tangle": a region of the graph where long, uninterrupted, singly-connected regions of the graph collapse into a messy structure wherein every vertex appears to connect to many others.  The IGV screenshot for this region (Figure \ref{fig:tangle.igv} shows a number of errorful reads spanning a homopolymer region.  If these results are due to a recurrent error by the sequencer (sometimes skipping one, two, or many bases), they may occur slightly differently between samples and often enough to produce enough kmers to overcome the novelty coverage thresholds.  This would give rise to a stretch of novel kmers near the low-complexity region that fails to resolve into a \textit{de novo} variant.
 
 One can conceive of a few simple checks to remove these events from our callset (e.g. walking the graph within a certain radius to discover potential nearby tangles).  However, such regions may also be biologically interesting, potentially giving rise to small indels induced by DNA repair over those low-complexity sequences.  Unclassified events are not harmful to us, as they will not count in measures of SNP, MNP, indel, or NAHR event mutation rates.  They simply eat up novel kmers without assigning any identity to the kmers.  For these reasons, we have not made strong efforts to filter them out.
 
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{{tangle.igv}.pdf}
-  \caption{A low-complexity region of the genome containing many reads with many apparent errors.}
-  \label{fig:tangle.igv}
-\end{sidewaysfigure}
-
 \subsubsection{Events $3$ and $4$: two SNPs}
 
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{twosnps}
-  \caption{Two SNPs, non-obvious from the alignments, but apparent in graph.  a. IGV screenshot of two \textit{de novo} SNPs in a \textit{var} gene.  b. Graphical view of the two SNPs.}
-  \label{fig:twosnps}
-\end{sidewaysfigure}
-
-Figure \ref{fig:twosnps} show the last events in this sample, two SNPs set $5$ bp apart, and reveal an interesting limitation of our graphical approach.  While our alignments of the parental sequence suggest these events occur on chromosome $4$, no evidence for the events are found at that locus.  A BLAST search reveals the proper home (barring a single nucleotide) to be on chromosome $1$, within the PF3D7\_0100100 \textit{var} gene - the same gene involved in the NAHR event described above.  This locus is shown in Figure \ref{misplacedsnp}.  The misplacement of these events are likely due to an error in the reference sequence.  A single nucleotide error in the reference sequence prevents us from finding the true home of the kmers spanning the error.  By chance, those aberrant kmer exist elsewhere in the genome: a \textit{var} gene on chromosome $4$.  This misleads us into choosing the home on chromosome $1$ instead.  Thus, while the events are likely to be real, our placement is erroneous.
-
-\begin{sidewaysfigure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{misplacedsnp}
-  \caption{The true home of the aforementioned two SNPs.}
-  \label{fig:misplacedsnp}
-\end{sidewaysfigure}
+Figure \ref{fig:twosnps} show the last events in this sample, two SNPs set $5$ bp apart, and reveal an interesting limitation of our graphical approach.  While our alignments of the parental sequence suggest these events occur on chromosome $4$, no evidence for the events are found at that locus.  A BLAST search reveals the proper home (barring a single nucleotide) to be on chromosome $1$, within the $PF3D7\_0100100$ \textit{var} gene - the same gene involved in the NAHR event described above.  This locus is shown in Figure \ref{misplacedsnp}.  The misplacement of these events are likely due to an error in the reference sequence.  A single nucleotide error in the reference sequence prevents us from finding the true home of the kmers spanning the error.  By chance, those aberrant kmer exist elsewhere in the genome: a \textit{var} gene on chromosome $4$.  This misleads us into choosing the home on chromosome $1$ instead.  Thus, while the events are likely to be real, our placement is erroneous.
 
 \subsection{Rejected events}
 
@@ -293,6 +245,37 @@ We applied our software to determine the number of novel kmers in all samples an
 
 Next, we applied our DNM calling software to all samples.  To see how many of the novel kmers were explained by variants passing filters, unknown events passing filters, or events failing filters, we superimposed the variant calls' novel kmer usage atop the total number of novel kmers per sample.  As evident in Figure \ref{fig:novelKmerUsage-1}, there is substantial variation between samples.  As predicted, many of the 803xGB4 variants are unclassified.  The median fraction of kmers explained by definable variants passing filters is a mere $29\%$, but when events failing filters are removed from consideration, this number jumps to $70\%$ of novel kmers explained.
 
+Figures \ref{fig:3D7xHB3.circos}-\ref{fig:803xGB4.circos} 
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{{3D7xHB3.circos}.png}
+  \caption{All \textit{de novo} variants in the 3D7xHB3 cross (untyped events suppressed)}
+  \label{fig:3D7xHB3.circos}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{{HB3xDD2.circos}.png}
+  \caption{All \textit{de novo} variants in the HB3xDD2 cross (untyped events suppressed)}
+  \label{fig:HB3xDD2.circos}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{{7G8xGB4.circos}.png}
+  \caption{All \textit{de novo} variants in the 7G8xGB4 cross (untyped events suppressed)}
+  \label{fig:7G8xGB4.circos}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=\textwidth]{{803xGB4.circos}.png}
+  \caption{All \textit{de novo} variants in the 803xGB4 cross (untyped events suppressed)}
+  \label{fig:803xGB4.circos}
+\end{figure}
+
+
 \subsection{Variants per sample and cross}
 
 Within each sample, we removed allelic variants appearing within the same gene as an NAHR event since, as we saw in the previous section, partial recovery of NAHR events can lead to erroneous accounting of the true mutation rates.  This rejects $211$ additional events, leaving us with $7,193$ that pass filters.
@@ -300,18 +283,6 @@ Within each sample, we removed allelic variants appearing within the same gene a
 The monomorphic and polymorphic variants per sample and cross are summarized in Tables \ref{tbl:variantTableMono} and \ref{tbl:variantTablePoly}.  Behavior is largely consistent between samples and crosses.  Typically, each sample harbors only one or two monomorphic variants (presumably accumulated prior to or during meiosis), and fewer polymorphic variants (presumably accumulated during mitosis).  SNPs are the most common variant, followed by deletion events.  Insertions and multinucleotide polymorphisms occur rarely.  We detect no inversions.
 
 At first glance, the 803xGB4 cross seems to harbor an unusual amount of NAHR activity.  However, we believe skepticism is warranted for this type of variant in this cross.  The key to detecting NAHR events is determining that many kmers co-localize on the same contig in the child but originate from different chromosomes in the parent.  With a poor 803 parental assembly constructed from short Illumina reads, many events may span multiple parental contigs but be part of the same chromosome.  A possible solution would be to align these parental contigs to the 3D7 reference and apply heuristics, rejecting any event where different contigs involved in the event align to the same chromosome.  However, this solution is not necessarily workable.  The assembled contigs are short, and the divergence between 803 and 3D7 is very high, particularly in the subtelomeric regions where true events almost certainly originate.  Therefore, alignment of the parental contigs to the 3D7 reference is not expected to solve the problem.  We have initiated an effort to have the 803 parent sequenced on PacBio instruments.  At of this writing, such data is not expected to be available for several months.
-
-%\begin{figure}[h!]
-%  \centering
-%    \includegraphics[width=\textwidth]{variantbarplot-1}
-%  \caption{Variants per sample and cross.  Top: monomorphic variants.  Bottom: polymorphic variants.}
-%  \label{fig:variantbarplot-1}
-%\end{figure}
-
-% Outstanding items
-% 1. FDR
-% 2. Verification (or refutation) of every known NAHR event
-% 3. Rates
 
 \begin{table}[]
 \small
@@ -397,50 +368,56 @@ In contrast, examining the 3D7xHB3 and HB3xDD2 crosses, we find $5$ events, all 
 \label{tbl:nahrcompare}
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Sample    & Cross   & Called in Claessens \textit{et al.} & Called in this study & Support in kmer recovery \\ \midrule
-PG0015-C  & HB3xDD2 & n                         & y                    & y                        \\
-PG0018-C  & HB3xDD2 & n                         & y                    & y                        \\
-PG0020-C  & HB3xDD2 & y                         & n                    & n                        \\
-PG0025-C  & HB3xDD2 & n                         & y                    & n                        \\
-PG0030-C  & HB3xDD2 & y                         & n                    & n                        \\
-PG0034-C  & HB3xDD2 & y                         & n                    & y                        \\
-PG0035-Cx & HB3xDD2 & n                         & y                    & n                        \\
-PG0036-C  & HB3xDD2 & y                         & n                    & wrong genes              \\
-PG0038-C  & HB3xDD2 & y                         & n                    & y                        \\
-PG0044-C  & HB3xDD2 & y                         & n                    & n                        \\
-PG0054-C  & 3D7xHB3 & y                         & n                    & n                        \\
-PG0055-C  & 3D7xHB3 & n                         & y                    & y                        \\
-PG0058-C  & 3D7xHB3 & y                         & n                    & wrong gene               \\
-PG0063-C  & 3D7xHB3 & y                         & y                    & y                        \\
-PG0067-C  & 3D7xHB3 & n                         & y                    & n                        \\
-PG0068-C  & 3D7xHB3 & y                         & n                    & n                        \\
-PG0069-C  & 3D7xHB3 & y                         & n                    & n                        \\
-PG0070-C  & 3D7xHB3 & n                         & y                    & n                        \\
-PG0071-C  & 3D7xHB3 & n                         & y                    & y                        \\
-PG0072-C  & 3D7xHB3 & y                         & n                    & wrong gene               \\
-PG0079-CW & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0082-C  & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0085-C  & 7G8xGB4 & y                         & y                    & NA                       \\
-PG0087-C  & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0088-C  & 7G8xGB4 & y                         & y                    & NA                       \\
-PG0095-C  & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0100-CW & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0103-CW & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0105-CW & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0107-C  & 7G8xGB4 & y                         & n                    & NA                       \\
-PG0112-C  & 7G8xGB4 & NA                        & y                    & NA                       \\
-PG0113-C  & 7G8xGB4 & NA                        & y                    & NA                       \\
-PG0444-C  & 803xGB4 & NA                        & y                    & NA                       \\
-PG0456-C  & 803xGB4 & NA                        & y                    & NA                       \\
-PG0459-C  & 803xGB4 & NA                        & y                    & NA                       \\
-PG0468-C  & 803xGB4 & NA                        & y                    & NA                       \\
-PG0469-C  & 803xGB4 & NA                        & y                    & NA                       \\ \bottomrule
+Sample    & Cross   & In Claessens \textit{et al.} & In this study & Support in kmer recovery \\ \midrule
+PG0015-C  & HB3xDD2 & n                            & y             & y                        \\
+PG0018-C  & HB3xDD2 & n                            & y             & y                        \\
+PG0020-C  & HB3xDD2 & y                            & n             & n                        \\
+PG0025-C  & HB3xDD2 & n                            & y             & n                        \\
+PG0030-C  & HB3xDD2 & y                            & n             & n                        \\
+PG0034-C  & HB3xDD2 & y                            & n             & y                        \\
+PG0035-Cx & HB3xDD2 & n                            & y             & n                        \\
+PG0036-C  & HB3xDD2 & y                            & n             & wrong genes              \\
+PG0038-C  & HB3xDD2 & y                            & n             & y                        \\
+PG0044-C  & HB3xDD2 & y                            & n             & n                        \\
+PG0054-C  & 3D7xHB3 & y                            & n             & n                        \\
+PG0055-C  & 3D7xHB3 & n                            & y             & y                        \\
+PG0058-C  & 3D7xHB3 & y                            & n             & wrong gene               \\
+PG0063-C  & 3D7xHB3 & y                            & y             & y                        \\
+PG0067-C  & 3D7xHB3 & n                            & y             & n                        \\
+PG0068-C  & 3D7xHB3 & y                            & n             & n                        \\
+PG0069-C  & 3D7xHB3 & y                            & n             & n                        \\
+PG0070-C  & 3D7xHB3 & n                            & y             & n                        \\
+PG0071-C  & 3D7xHB3 & n                            & y             & y                        \\
+PG0072-C  & 3D7xHB3 & y                            & n             & wrong gene               \\
+PG0079-CW & 7G8xGB4 & y                            & n             & NA                       \\
+PG0082-C  & 7G8xGB4 & y                            & n             & NA                       \\
+PG0085-C  & 7G8xGB4 & y                            & y             & NA                       \\
+PG0087-C  & 7G8xGB4 & y                            & n             & NA                       \\
+PG0088-C  & 7G8xGB4 & y                            & y             & NA                       \\
+PG0095-C  & 7G8xGB4 & y                            & n             & NA                       \\
+PG0100-CW & 7G8xGB4 & y                            & n             & NA                       \\
+PG0103-CW & 7G8xGB4 & y                            & n             & NA                       \\
+PG0105-CW & 7G8xGB4 & y                            & n             & NA                       \\
+PG0107-C  & 7G8xGB4 & y                            & n             & NA                       \\
+PG0112-C  & 7G8xGB4 & NA                           & y             & NA                       \\
+PG0113-C  & 7G8xGB4 & NA                           & y             & NA                       \\
+PG0444-C  & 803xGB4 & NA                           & y             & NA                       \\
+PG0456-C  & 803xGB4 & NA                           & y             & NA                       \\
+PG0459-C  & 803xGB4 & NA                           & y             & NA                       \\
+PG0468-C  & 803xGB4 & NA                           & y             & NA                       \\
+PG0469-C  & 803xGB4 & NA                           & y             & NA                       \\ \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{landscape}
 \begin{figure}[h!]
   \centering
-    \includegraphics[width=\textwidth]{kmerrecoverytpfp}
+    \includegraphics[width=1.5\textwidth]{kmerrecoverytpfp}
   \caption{Recovery of diagnostic kmers in 3D7 and HB3 \textit{var} genes.  White regions indicate kmers that were not diagnostic.  Vertical grey indicates a diagnostic kmer that absent in the progeny, while vertical colored lines indicate the kmer's presence.  a. Two genes in PG0020-C purported to have an NAHR event in Claessens \textit{et al.}, but exhibiting no kmer loss indicative of an NAHR event.  b. Two genes in PG0034-C with missing diagnostic kmers, possibly indicative of an NAHR event.  c. Two genes (DD2var13 and DD2var18) which exhibit very slight recovery or loss of diagnostic kmers towards their terminal ends.}
   \label{fig:kmerrecoverytpfp}
 \end{figure}
+\end{landscape}
+
+\section{Summary}
+
+
