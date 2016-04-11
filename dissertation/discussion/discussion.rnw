@@ -1,6 +1,8 @@
 \chapter{Discussion}
 \label{ch:discussion}
 
+\section{Introduction}
+
 \newthought{In this dissertation, we have demonstrated a graphical method} for the detection of \textit{de novo} mutations.  We have attempted to address six major concerns regarding detection of DNMs in genomes.  First, false-positive rates are hard to control in reference-based analyses, typically requiring myriad filters with dubious justifications.  Second, sensitivity is difficult to ascertain, as estimates would normally require an assessment of every base in the genome.  Without whole-genome assemblies of all samples (a prohibitively expensive prospect), such sensitivity measures cannot be produced.  Third, reference-based analyses cannot provide access to accessory regions of the genome - regions that are clinically interesting and often highly divergent between different members of the population.  Fourth, a new method should scale beyond the genomes of small parasites, all the way to sizes typical of mammalian genomes and beyond.  Fifth, in keeping with the need to scale beyond parasite genomes, it must also be capable of handling non-haploid data.  Finally, the method must be robust to low read coverage.  All six elements are addressed by the implementation and application of our graphical variant caller, designed to operate without the need for a reference sequence and on the novel kmers produced by the mutational processes that generate \textit{de novo} mutations.
 
 \section{Reference versus graph}

@@ -109,4 +109,4 @@ In \textit{P. falciparum}, no information regarding a parental age effect is ava
 
 \section{Summary}
 
-\textit{De novo} mutations may arise from a multitude of sources.  However, they tend to be rare, occurring just 
+\textit{De novo} mutations may arise from a multitude of sources.  Although SNPs are the most common mutational class observed, \textit{de novo} mutations can run the gamut from simple point mutations, to insertions and deletions of various lengths, even to interchromosomal exchanges.  They tend to be rare, occurring just a handful of times within a genome per sample per generation.  Our approach will need to be able to distinguish error from true variants, and encompass a wide range of mutational classes.
