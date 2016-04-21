@@ -1,4 +1,4 @@
-\documentclass[11pt, twoside, openright]{ociamthesis}\usepackage[]{graphicx}\usepackage[]{color}
+\documentclass[11pt,oneside]{ociamthesis}\usepackage[]{graphicx}\usepackage[]{color}
 %% maxwidth is the original width if it is less than linewidth
 %% otherwise use linewidth (to make sure the graphics do not exceed the margin)
 \makeatletter
@@ -62,6 +62,7 @@
 \usepackage{tabularx}
 \usepackage{amsmath}
 \usepackage{algorithm}
+\usepackage{algcompatible}
 \usepackage{lscape}
 \usepackage{rotating}
 \usepackage{mathrsfs}
@@ -72,6 +73,7 @@
 \usepackage[font=normal,labelfont=bf]{caption}
 \usepackage[superscript]{cite}
 \usepackage[toc,page]{appendix}
+%\usepackage[natbib=true,style=numeric,sorting=none]{biblatex}
 \renewcommand{\citedash}{--}
 
 \RequirePackage[osf,sc]{mathpazo}
@@ -152,7 +154,7 @@
 % ============
 % Bibliography
 % ============
-\addcontentsline{toc}{chapter}{Bibliography}
+\addcontentsline{toc}{chapter}{References}
 \renewcommand{\bibname}{References}
 \bibliography{/Users/kiran/Documents/allpapers}
 \bibliographystyle{unsrt}

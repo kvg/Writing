@@ -82,7 +82,7 @@ To guard against these false calls, we imposed two conditions.  First, we requir
   \label{fig:ideogram-1}
 \end{figure}
 
-We produced graph-based DNM calls using our software in three samples: Dennis, Ruud, and Marlies.  We have listed all variant calls made in both the reference-based and graph-based analyses in Table \ref{ruud_rf_vs_graph}, itself an expansion of a Table $S6$ in the Supplementary Online Methods from Venn \textit{et al.}, 2014\cite{Venn:2014ep}.  Each row in the table lists a variant call made in the sample.  Each call is either unique to the reference-based analysis (in which case the GraphCall column is "."), or the graph-based analysis (in which case the NovelKmerFound column is "novel"), or both (NovelKmerFound is "present" and GraphCall indicates the event type).  Many of the reference-based calls were validated by Sequenom assays.  Validation status is indicated as $1$ (validated), $0$ (failed to validate), or $-$ (not validated).  For brevity, we have only included the results for Ruud in this listing, as this sample had the largest number of validated sites.
+We produced graph-based DNM calls using our software in three samples: Dennis, Ruud, and Marlies.  We have listed all variant calls made in both the reference-based and graph-based analyses in Table \ref{tbl:ruud_ref_vs_graph}, itself an expansion of a Table $S6$ in the Supplementary Online Methods from Venn \textit{et al.}, 2014\cite{Venn:2014ep}.  Each row in the table lists a variant call made in the sample.  Each call is either unique to the reference-based analysis (in which case the GraphCall column is "."), or the graph-based analysis (in which case the NovelKmerFound column is "novel"), or both (NovelKmerFound is "present" and GraphCall indicates the event type).  Many of the reference-based calls were validated by Sequenom assays.  Validation status is indicated as $1$ (validated), $0$ (failed to validate), or $-$ (not validated).  For brevity, we have only included the results for Ruud in this listing, as this sample had the largest number of validated sites.
 
 We considered sites that passed validation and others that passed visual inspect of alignments in IGV to be true positives.  $31$ such sites were recovered in the graphical analysis.  $19$ were classified as false negatives - that is, present in the reference-based analysis and seemingly real, but missed by our caller.  The positions of each DNM are shown in Figure \ref{fig:ideogram-1}, with variants from the reference-based analysis to the left of the ideogram and variants from the graph-based analysis to the right.
 
@@ -100,7 +100,7 @@ Most assembly algorithms are not written to discover heterozygous sites, but rat
 \begin{table}[]
 \tiny
 \centering
-\caption{Variants found in $F_1$ sample, Ruud, in the reference-based and graph-based analyses.}
+\caption{Variants found in Ruud in the reference- and graph-based analyses.}
 \label{tbl:ruud_ref_vs_graph}
 \begin{tabular}{@{}lllllllll@{}}
 \toprule

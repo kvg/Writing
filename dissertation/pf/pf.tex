@@ -197,7 +197,7 @@ One can conceive of a few simple checks to remove these events from our callset 
 
 \subsubsection{Events $3$ and $4$: two SNPs}
 
-Figure \ref{fig:twosnps} show the last events in this sample, two SNPs set $5$ bp apart, and reveal an interesting limitation of our graphical approach.  While our alignments of the parental sequence suggest these events occur on chromosome $4$, no evidence for the events are found at that locus.  A BLAST search reveals the proper home (barring a single nucleotide) to be on chromosome $1$, within the $PF3D7\_0100100$ \textit{var} gene - the same gene involved in the NAHR event described above.  This locus is shown in Figure \ref{misplacedsnp}.  The misplacement of these events are likely due to an error in the reference sequence.  A single nucleotide error in the reference sequence prevents us from finding the true home of the kmers spanning the error.  By chance, those aberrant kmer exist elsewhere in the genome: a \textit{var} gene on chromosome $4$.  This misleads us into choosing the home on chromosome $1$ instead.  Thus, while the events are likely to be real, our placement is erroneous.
+Figure \ref{fig:twosnps} show the last events in this sample, two SNPs set $5$ bp apart, and reveal an interesting limitation of our graphical approach.  While our alignments of the parental sequence suggest these events occur on chromosome $4$, no evidence for the events are found at that locus.  A BLAST search reveals the proper home (barring a single nucleotide) to be on chromosome $1$, within the $PF3D7\_0100100$ \textit{var} gene - the same gene involved in the NAHR event described above.  This locus is shown in Figure \ref{fig:misplacedsnp}.  The misplacement of these events are likely due to an error in the reference sequence.  A single nucleotide error in the reference sequence prevents us from finding the true home of the kmers spanning the error.  By chance, those aberrant kmer exist elsewhere in the genome: a \textit{var} gene on chromosome $4$.  This misleads us into choosing the home on chromosome $1$ instead.  Thus, while the events are likely to be real, our placement is erroneous.
 
 \subsection{Rejected events}
 
@@ -245,36 +245,35 @@ We applied our software to determine the number of novel kmers in all samples an
 
 Next, we applied our DNM calling software to all samples.  To see how many of the novel kmers were explained by variants passing filters, unknown events passing filters, or events failing filters, we superimposed the variant calls' novel kmer usage atop the total number of novel kmers per sample.  As evident in Figure \ref{fig:novelKmerUsage-1}, there is substantial variation between samples.  As predicted, many of the 803xGB4 variants are unclassified.  The median fraction of kmers explained by definable variants passing filters is a mere $29\%$, but when events failing filters are removed from consideration, this number jumps to $70\%$ of novel kmers explained.
 
-Figures \ref{fig:3D7xHB3.circos}-\ref{fig:803xGB4.circos} 
+Figures \ref{fig:3D7xHB3.circos}-\ref{fig:803xGB4.circos} show all monomorphic and typed variation in the 3D7xHB3, HB3xDD2, 7G8xGB4, and 803xGB4 crosses.  As we have seen that untyped variation (events classified as "unknown" are typically some sort of artifact from contamination or graphical tangles, we have suppressed all untyped events in these plots).
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{{3D7xHB3.circos}.png}
-  \caption{All \textit{de novo} variants in the 3D7xHB3 cross (untyped events suppressed)}
+  \caption{All monomorphic, typed \textit{de novo} variants in the 3D7xHB3 cross (untyped events suppressed).  Outer ring: chromosome ideogram from the 3D7 reference genome.  Middle ring: mapping of chromosomes from the 3D7 parental assembly (finished genome; identical to the 3D7 reference) to the reference.  Inner ring: mapping of HB3 parental assembly (draft genome from PacBio sequencing) to the reference.  SNPs, MNPs, and indels are depicted by circles, squares, and triangles, respectively.  NAHR events shown as arcs linking the involved chromosomes; thickness of each arc is proportional to the contig length.}
   \label{fig:3D7xHB3.circos}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{{HB3xDD2.circos}.png}
-  \caption{All \textit{de novo} variants in the HB3xDD2 cross (untyped events suppressed)}
+  \caption{All monomorphic, typed \textit{de novo} variants in the HB3xDD2 cross (untyped events suppressed).  Outer ring: chromosome ideogram from the 3D7 reference genome.  Middle ring: mapping of chromosomes from the HB3 parental assembly (draft genome from PacBio sequencing) to the reference.  Inner ring: mapping of DD2 parental assembly (draft genome from PacBio sequencing) to the reference.  SNPs, MNPs, and indels are depicted by circles, squares, and triangles, respectively.  NAHR events shown as arcs linking the involved chromosomes; thickness of each arc is proportional to the contig length.}
   \label{fig:HB3xDD2.circos}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{{7G8xGB4.circos}.png}
-  \caption{All \textit{de novo} variants in the 7G8xGB4 cross (untyped events suppressed)}
+  \caption{All monomorphic, typed \textit{de novo} variants in the 7G8xGB4 cross (untyped events suppressed).  Outer ring: chromosome ideogram from the 3D7 reference genome.  Middle ring: mapping of chromosomes from the 7G8 parental assembly (draft genome from PacBio sequencing) to the reference.  Inner ring: mapping of GB4 parental assembly (draft genome from PacBio sequencing) to the reference.  SNPs, MNPs, and indels are depicted by circles, squares, and triangles, respectively.  NAHR events shown as arcs linking the involved chromosomes; thickness of each arc is proportional to the contig length.}
   \label{fig:7G8xGB4.circos}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=\textwidth]{{803xGB4.circos}.png}
-  \caption{All \textit{de novo} variants in the 803xGB4 cross (untyped events suppressed)}
+  \caption{All monomorphic, typed \textit{de novo} variants in the 803xGB4 cross (untyped events suppressed).  Outer ring: chromosome ideogram from the 3D7 reference genome.  Middle ring: mapping of chromosomes from the 803 parental assembly (low-quality draft genome from Illumina sequencing) to the reference.  Inner ring: mapping of GB4 parental assembly (draft genome from PacBio sequencing) to the reference.  SNPs, MNPs, and indels are depicted by circles, squares, and triangles, respectively.  NAHR events shown as arcs linking the involved chromosomes; thickness of each arc is proportional to the contig length.}
   \label{fig:803xGB4.circos}
 \end{figure}
-
 
 \subsection{Variants per sample and cross}
 
@@ -420,4 +419,4 @@ PG0469-C  & 803xGB4 & NA                           & y             & NA         
 
 \section{Summary}
 
-
+Our graphical variant caller successfully identifies a wealth of \textit{de novo} mutation in the \textit{Plasmodium falciparum} crosses.  The rates for SNPs appear consistent with estimates made by Bopp \textit{et al.} and Claessens \textit{et al.}, amounting to less than roughly $2$ SNPs per sample.  Deletions are rarer than insertions, and both tend to arise as STR contractions or STR expansion/tandem duplications.  NAHR events are exceedingly rare.  While Claessens \textit{et al.} claimed evidence of such events involving exon $1$ of core \textit{var} genes, we do not find evidence for this in our graphical variant calls, nor do we see the tell-tale signs of mosaicism in the kmer recovery plots.

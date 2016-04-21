@@ -1,6 +1,8 @@
 \chapter{Simulation}
 \label{ch:simulation}
 
+\section{Introduction}
+
 \newthought{\textit{De novo} mutations will undoubtedly take myriad forms} (SNPs, insertions and deletions of varying length, expansions and contractions of short tandem repeats, tandem duplications, non-allelic homologous recombinations, and possibly even inversions).  Detecting all types of variants is a considerable challenge, and the software to do so will be introduced in the next chapter.  In order to measure that software's expected sensitivity and specificity to such variation, we require truth datasets to which we can compare our calls.  A sufficiently small genome (on the order of tens of megabases), could be run on third-generation sequencers, the long reads used to assemble full-length genomes.  Then, the variants called from short-read second-generation sequencing data could be compared to the "truth" dataset established by the newer platform.  This is still very expensive (thousands of dollars for each sample), which limits the number of samples that could be feasibly obtained.  Furthermore, if variants of the classes we are attempting to identify are absent in the handful of genomes we can afford to sequence, we would not be able to accurately ascertain our power.  Finally, it is extraordinarily time-consuming; long-read sequencing experiments require tens of micrograms of genomic, high molecular weight DNA during library construction, which translates to several months of culturing.  For \textit{P. falciparum} parasites which are notorious for being difficult to adapt to culture conditions, this limits the number of samples one can reasonably expect to sequence.
 
 We chose to pursue both a simulation strategy and a validation strategy in order to measure our DNM calling performance.  The results from validation will be presented in Chapter \ref{ch:realdata}.  For the simulation work, we developed two components: first we must generate the genomes of the parents and several children, including each type of DNM we hope to discover.  From these genomes, we must then simulate reads that realistically model errors inherent in our data (matching read lengths, fragment size distributions, single base mismatch errors, indel errors, read pair chimeras, coverage profile, etc.).  We discuss both of these components below.
@@ -15,8 +17,6 @@ Our algorithm, \texttt{IncorporateVariantsIntoGenome}, is described in Algorithm
 
 Note that we chose not to process each variant iteratively as insertions (deletions) would increase (decrease) the size of the array, altering the mapping between the VCF positions and the array positions.  Keeping track of the mapping in spite of the changes is cumbersome.  Instead, out scheme of placing all of the variants on the chromosome array first and then emitting the resulting sequence preserves the mapping.  We will revisit this strategy later on in this chapter when we introduce an algorithm to lift data over from the reference genome coordinates to a simulated genome's coordinates.
 
-Algorithm \ref{alg:IncorporateVariantsIntoGenome} could fail to produce a correct FASTA file in the pathological case that there are multiple overlapping variants called at a single locus.  We are careful to avoid that scenario; we set our simulated variants to be placed no closer than $1000$ bp from one another.
-
 \begin{algorithm}
 \caption{Generate an alternative reference sequence based on a VCF file.}
 \label{alg:IncorporateVariantsIntoGenome}
@@ -27,7 +27,7 @@ Algorithm \ref{alg:IncorporateVariantsIntoGenome} could fail to produce a correc
 
         \ForAll{$\textit{vc} \textrm{ in } \textit{vcs}$}
             \If{$\textit{vc.getType()} \textrm{ == } \texttt{DEL} \textrm{ || } \textit{vc.getType()} \textrm{ == } \texttt{MNP}$}
-                \For{$\textit{pos} \textrm{ in } \textit{vc.getPosition()}:(\textit{vc.getPosition()} + \textit{vc.getReferenceAllele().length())}$}
+                \For{\textit{pos}\textrm{ in }\textit{vc.getPosition()}\textrm{ to }(\textit{vc.getPosition()} $+$ \textit{vc.getReferenceAllele().length()})}
                     \State $\textit{chr[pos]} = ""$
                 \EndFor
             \EndIf
@@ -41,13 +41,26 @@ Algorithm \ref{alg:IncorporateVariantsIntoGenome} could fail to produce a correc
 \end{algorithmic}
 \end{algorithm}
 
+Algorithm \ref{alg:IncorporateVariantsIntoGenome} could fail to produce a correct FASTA file in the pathological case that there are multiple overlapping variants called at a single locus.  We are careful to avoid that scenario; we set our simulated variants to be placed no closer than $1,000$ bp from one another.
+
 Many algorithms presented in this chapter rely on empirical distributions to model cross-over rates, read fragment size, indel lengths, and positional errors in reads.  In all cases, we use the inverse transform sampling method for pseudo-random number generation from an arbitrary probability distribution given its cumulative distribution function (CDF)\cite{Devroye:2013gi}.  Simply put, we compute the CDF for an empirical probability distribution, generate a random uniform deviate between $0$ and $1$ for the $x$ value, and interpolate the $y$ value from the CDF.
 
 \subsection{Parents}
 
+\begin{figure}[p]
+  \centering
+    \includegraphics[width=\textwidth]{modrefworkflow}
+  \caption{Workflow for generating the HB3 parental genome.  a. Reads from HB3 sample, PG0052-C, are mapped to the 3D7 reference genome, and variants (SNPs and indels) are called and stored as a VCF file.  b. We remove the 3D7 \textit{var} gene repertoire, replacing each with a reasonable HB3 \textit{var} counterpart, and encode the changes to the 3D7 reference genome as a VCF file.  c. We alter the reference genome using Algorithm \ref{alg:IncorporateVariantsIntoGenome}, thus producing the simulated HB3 genome.}
+  \label{fig:modrefworkflow}
+\end{figure}
+
+We began by simulating the genomes of two parents using a workflow depicted in Figure \ref{fig:modrefworkflow}.  For convenience, we simulated samples from the 3D7xHB3 cross.  Choosing the existing reference sequence for the 3D7 sample obviates the need to generate any data for the first parent.  The second parent is tricker; while an existing draft reference sequences does exist for HB3, it is of low quality, assembled into thousands of pieces rather than the simple $14$ autosomes we expect (Table \ref{tbl:ref_asm_stats} shows metrics on every \textit{P. falciparum} sample publicly available).  Using the supercontigs from draft reference sequences is hugely cumbersome for simulating recombination as it is not straightforward to decide which chromosomes in the 3D7 genome and which supercontigs should be processed together.
+
+Instead, we chose to produce a new HB3 reference genome sequence by taking the 3D7 reference and inserting the appropriate modifications using Algorithm \ref{alg:IncorporateVariantsIntoGenome}. These modifications are comprised of two parts: introducing the appropriate variants, and replacing the \textit{var} gene repertoire.
+
 \begin{table}[]
 \centering
-\caption{Assembly statistics on publicly available finished and draft \textit{P. falciparum} references, ordered by scaffold N50 length.  Parental samples are shown in boldface.}
+\caption{Assembly statistics on publicly available finished and draft \textit{P. falciparum} references, ordered by scaffold N50 length.  Parents are shown in bold.}
 \label{tbl:ref_asm_stats}
 \begin{tabular}{@{}llllll@{}}
 \toprule
@@ -72,22 +85,11 @@ PFCLIN          & Ghana                   & 42.19          & 18,711         & 2.
 \end{tabular}
 \end{table}
 
-We began by simulating the genomes of two parents using a workflow depicted in Figure \ref{fig:modrefworkflow}.  For convenience, we simulated samples from the 3D7xHB3 cross.  Choosing the existing reference sequence for the 3D7 sample obviates the need to generate any data for the first parent.  The second parent is tricker; while an existing draft reference sequences does exist for HB3, it is of low quality, assembled into thousands of pieces rather than the simple $14$ autosomes we expect (Table \ref{tbl:ref_asm_stats} shows metrics on every \textit{P. falciparum} sample publicly available).  Using the supercontigs from draft reference sequences is hugely cumbersome for simulating recombination as it is not straightforward to decide which chromosomes in the 3D7 genome and which supercontigs should be processed together.
+We first obtained a VCF of variants found in the HB3 sample, PG0052-C, from the 3D7xHB3 cross dataset\cite{Miles:2015in}.  Variant counts are described in the Table \ref{tb:hb3_variants}, and include SNPs, insertions, deletions, and complex (simultaneous insertions and deletions) events.  These calls were made by combining the results of the reference-based \texttt{UnifiedGenotyper} module in the GATK\cite{DePristo:2011fo} and the reference-free bubble-calling algorithm in the Cortex\cite{Iqbal:2012fx} software.  All calls were restricted to the core genome; subtelomeric regions were masked out due to poor mapping properties (owing to the tremendous diversity in these regions of other \textit{P. falciparum} parasites with respect to the 3D7 reference).
 
-Instead, we chose to produce a new HB3 reference genome sequence by taking the 3D7 reference and inserting the appropriate modifications using Algorithm \ref{alg:IncorporateVariantsIntoGenome}. These modifications are comprised of two parts: introducing the appropriate variants, and replacing the \textit{var} gene repertoire.
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{modrefworkflow}
-  \caption{Workflow for generating the HB3 parental genome.  a. Reads from HB3 sample, PG0052-C, are mapped to the 3D7 reference genome, and variants (SNPs and indels) are called and stored as a VCF file.  b. We remove the 3D7 \textit{var} gene repertoire, replacing each with a reasonable HB3 \textit{var} counterpart, and encode the changes to the 3D7 reference genome as a VCF file.  c. We alter the reference genome using Algorithm \ref{alg:IncorporateVariantsIntoGenome}, thus producing the simulated HB3 genome.}
-  \label{fig:modrefworkflow}
-\end{figure}
-
-We first obtained a VCF of variants found in the HB3 sample, PG0052-C, from the MalariaGen 3D7xHB3 cross dataset\cite{Miles:2015in}.  Variant counts are described in the Table \ref{tb:hb3_variants}, and include SNPs, insertions, deletions, and complex (simultaneous insertions and deletions) events.  These calls were made by combining the results of the reference-based \texttt{UnifiedGenotyper} module in the GATK\cite{DePristo:2011fo} and the reference-free bubble-calling algorithm in the Cortex\cite{Iqbal:2012fx} software.  All calls were restricted to the core genome; subtelomeric regions were masked out due to poor mapping properties (owing to the tremendous diversity in these regions of other \textit{P. falciparum} parasites with respect to the 3D7 reference).
-
-\begin{table}[]
+\begin{table}[b]
 \centering
-\caption{Variants found the HB3 (PG0052-C) sample from the MalariaGen 3D7xHB3 dataset.}
+\caption{Variants found the HB3 (PG0052-C) sample from the 3D7xHB3 dataset.}
 \label{tb:hb3_variants}
 \begin{tabular}{@{}ccccc@{}}
 \toprule
@@ -319,7 +321,7 @@ This algorithm is described in Algorithm \ref{alg:ComputeBaseAndFragmentErrorRat
 
 The genomic coordinates present in the table produced by Algorithm \ref{alg:ComputeBaseAndFragmentErrorRates} must be transformed from the reference sequence to the simulated genome before it can be used.  To do so, we developed a tool that could liftover the coordinates appropriately when given the table, reference sequence, and a VCF file describing the alterations made to the reference to transform it into the simulated genome.  This is accomplished with an algorithm similar to Algorithm \ref{alg:IncorporateVariantsIntoGenome}.  We iterate through each chromosome as we did before, storing the entire sequence as an array of strings, placing alternate alleles in the place of reference alleles, or in the case of deletions, replacing reference alleles with blank strings.  Once the array is populated, we advance through the coverage table one position at a time.  At each position, we emit the contents of the previously constructed table with the number of reads, fragments, and errors for each.  At some positions, insertions will have changed the length of the sequence in the bin, and the extra positions will not have explicit read and fragment information to emit.  To account for this, we keep running statistics on previously seen read and fragment statistics from which we can compute running means and standard deviation.  We generate new values for the number of reads, fragments, and error rates as necessary as the mean plus standard deviation of the relevant metric, ensuring the values are never less than $0$, and that we round up or down to the nearest integer (error rates are rounded up and read/fragment counts are rounded down to increase our self-penalty).
 
-This algorithm is described in \ref{alg:LiftoverFromRefToChild}.
+This procedure is described in Algorithm \ref{alg:LiftoverFromRefToChild}.
 
 \begin{algorithm}
 \caption{Lift a table from reference to child coordinates.}
@@ -362,13 +364,13 @@ We first store the following scalar information (as the data we are modelling is
 
 Example values for each of these metrics can be found in Table \ref{tbl:scalarvalues}.  Note that some of the mismatches, insertions, and deletions may represent true variation between the sample and the reference sequence.  We do not mask these sites out.  While this increases the apparent error rate, the variant rates are typically low compared to the number of bases in the reference sequence itself, making the difference negligible.  Furthermore, we will choose the reference sample as the exemplar dataset for the read simulations.  Since this sample should theoretically be identical to the reference sequence, this choice obviates the need for any masking of variants in the reference sample against the reference sequence.
 
-\begin{table}[]
+\begin{table}[h!]
 \centering
 \caption{Example read and fragment scalar properties for sample PG0063-C.}
 \label{tbl:scalarvalues}
 \begin{tabular}{@{}lr@{}}
 \toprule
-                   & PG0051-C\\
+                   & PG0063-C\\
 \midrule
 readLength         & 76\\
 numReads           & 38,846,418\\
@@ -384,7 +386,7 @@ numDeletions       & 317,076\\
 
 \subsubsection{Empirical distributions}
 
-Other properties take on a range of values with some probability.  Rather than trying to fit the underlying distributions explicitly (which can often fail as datasets contain more nuance than what sequencing platforms should theoretically produce), we instead store empirical distributions and generate random values from them accordingly.  We store the following empirical distributions:
+Other properties take on a range of values with some probability.  Most simulation software attempts to prescribe distributions from which these properties should be drawn, or require a user to specify them as input parameters.  Rather than trying to fit the underlying distributions explicitly (which can often fail as datasets contain more nuance than what sequencing platforms should theoretically produce), we instead store empirical distributions and generate random values from them accordingly.  We store the following empirical distributions:
 
 \begin{enumerate}
     \item number of errors (of any type - mismatch, insertion, or deletion) in a read
@@ -419,9 +421,9 @@ For each read, we increment an element in a table that corresponds to these six 
 
 \subsection{The read simulator}
 
-With the coverage and read profiles in hand, we are finally ready to simulate reads.  We advance through each base of the simulated genome, reading the coverage profile as we traverse.  At each site, we use the coverage profile to dictate the number of fragments that must be generated and how many of those fragments should contain errors, thus modelling regions of the genome with higher or lower error rates.  We then generate fragments, sampling fragment lengths from the empirical fragment length distribution.  If a read is to contain an error, as specified by the coverage profile, we construct a read-specific error profile for mismatches, insertions, and deletions.  These profiles take into account the preceeding dinucleotide context for each position in the read\footnote{To handle the first and second positions in the read, which do not have a dinucleotide context, we simply extract a read by starting two nucleotides into the simulated fragment.}, the end of the pair being simulated, whether the fragment came from the positive or negative strand, and the first nucleotide of the error to be incorporated (not applicable for deletions).  
+With the coverage and read profiles in hand, we are finally ready to simulate reads.  We advance through each base of the simulated genome, reading the coverage profile as we traverse.  At each site, we use the coverage profile to dictate the number of fragments that must be generated and how many of those fragments should contain errors, thus modelling regions of the genome with higher or lower error rates.  We then generate fragments, sampling fragment lengths from the empirical fragment length distribution.  If a read is to contain an error, as specified by the coverage profile, we construct a read-specific error profile for mismatches, insertions, and deletions.  These profiles take into account the preceeding dinucleotide context for each position in the read\footnote{To handle the first and second positions in the read, which do not have a dinucleotide context, we simply extract a read by starting two nucleotides into the simulated fragment.}, the end of the pair being simulated, whether the fragment came from the positive or negative strand, and the first nucleotide of the error to be incorporated (not applicable for deletions).  Figure \ref{fig:simreads} shows reads from a real sample and simulated data from an artificial sample over a $4$ kbp region.
 
-\begin{sidewaysfigure}[h!]
+\begin{sidewaysfigure}[p]
   \centering
     \includegraphics[width=\textwidth]{simreads}
   \caption{Read datasets for real (top panel), simulated perfect (middle panel), and simulated realistic (bottom panel) data.}
@@ -460,6 +462,7 @@ With our genome and read simulation framework now complete, we simulated the gen
 17 & 17 & 22 & 17 & 17 & 1 & 10 & 28 & 13 & 13 & 11\\
 18 & 23 & 18 & 23 & 23 & 2 & 8 & 1 & 21 & 21 & 18\\
 19 & 22 & 22 & 22 & 22 & 2 & 17 & 19 & 3 & 3 & 2\\
+total & 347 & 412 & 347 & 347 & 39 & 332 & 355 & 317 & 317 & 296 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -470,4 +473,4 @@ Unlike many other genome and read simulation software packages, our framework is
 
 We do note a minor error in our simulation.  When producing empirical distributions for the lengths of indel errors, we treated insertions and deletions as separate events needing separate distributions.  However, inspecting these distributions more closely, we notice a bias: more deletion errors are present than insertion errors.  This is likely to be an artifact of read mapping, rather than of biology or even of sequencing.  Reads with insertions are typically more troublesome to place on a reference genome correctly than reads with deletions.  Still, it would have been more appropriate to sample insertion and deletion error lengths from the same distribution.  This error is not expected to compromise the results from the simulation.
 
-We also note a deliberate omission: sample contamination.  Sample contamination by non-\textit{P. falciparum} data could generate false positive calls if, for instance, a child's sample is contaminated but the parents are not.  This point will be discussed in greater detail when examining validation data in Chapter \ref{cg:realdata}.
+We also note a deliberate omission: sample contamination.  Sample contamination by non-\textit{P. falciparum} data could generate false positive calls if, for instance, a child's sample is contaminated but the parents are not.  This point will be discussed in greater detail when examining validation data in Chapter \ref{ch:realdata}.

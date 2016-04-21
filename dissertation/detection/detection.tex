@@ -1,6 +1,8 @@
 \chapter{Detection and classification}
 \label{ch:methods}
 
+\section{Introduction}
+
 \newthought{We now present a novel graphical method} for detecting and classifiying \textit{de novo} variants.  We shall present some brief foundational background on \textit{de novo} assembly and graphical models, concepts upon which the variant caller is built.  The simulation framework and dataset we described in Chapter \ref{ch:simulation} will be used to establish the method's accuracy.
 
 Reference-based analyses benefit from being reasonably intuitive, as the underlying genome is linear and there are many visualization tools that can facilitate the user's understanding of the underlying data\cite{Li:2009p181,Bao:2009ie,Robinson:2011gy,Milne:2013gf,Thorvaldsdottir:2013iw}.  In contrast, graph data structures are far less intuitive and lack dedicated visualization tools in the genomics space.  In this chapter, we will also present images from our purpose-built graph visualization software for the purposes of guiding the reader's intuition regarding graphical variant motifs and the operation of the calling algorithms.
@@ -25,7 +27,7 @@ PG0051-C  & 51425   & 47         & 27520      & 478         & 1280    & 24602599
 \end{tabular}
 \end{table}
 
-It is perhaps surprising then to discover the central argument of this dissertation is on the value of \textit{de novo} assembly of short reads for \textit{de novo} mutation discovery.  After all, a poor-quality Illumina assembly - as evidenced by the numerous short contigs - would seem to be very limiting, even if it could theoretically reconstruct pieces of the genome that cannot be recovered from a reference-based analysis.  However, for the work that we describe in this chapter, the value is not in the contig reconstructions, but in the underlying data structure from which the contigs are produced: the "de Bruijn graph".
+It is perhaps surprising then to discover the central focus of this dissertation is on the value of \textit{de novo} assembly of short reads for \textit{de novo} mutation discovery.  After all, a poor-quality Illumina assembly - as evidenced by the numerous short contigs - would seem to be very limiting, even if it could theoretically reconstruct pieces of the genome that cannot be recovered from a reference-based analysis.  However, for the work that we describe in this chapter, the value is not in the contig reconstructions, but in the underlying data structure from which the contigs are produced: the "de Bruijn graph".
 
 The de Bruijn graph is a data structure that encodes read overlaps such that a walk through the vertices with unambiguous connections yields contiguous sequence in the genome.  In real data, those walks may end prematurely due to errors or homology, yielding junctions that cannot be confidently navigated.  Typically, assembly algorithms will be conservative in the contigs they emit from this data, choosing to terminate the walk at the junction rather than risk going forward and emitting sequence that does not actually appear in the genome.  However, with an additional set of metadata and a reasonable assumption, we can traverse the barrier.  In trio data, it is easy to detect a so-called novel kmer: a kmer occuring in the child but absent in the parents.  By annotating the graph with this information, we can see stretches of novel kmers.  Figure \ref{fig:graphwithextras} shows a portion of such an annotated graph.  Ignoring the annotations, a traversal that starts at vertex $D$ would yield a short contig: $C \rightarrow D \rightarrow E$.  However, if we assume the novel kmers link together, we can extend our traversal to yield $C \rightarrow D \rightarrow E \rightarrow F \rightarrow G \rightarrow H$.  These novel kmers are the hallmark of \textit{de novo} variation, and by utilizing these annotations, we can navigate parts of the graph that are otherwise unnavigable, surpassing what conservative contigs can give us and providing tremendous sensitivity and specificity to DNMs.
 
@@ -47,7 +49,7 @@ The de Bruijn graph is a data structure that encodes read overlaps such that a w
 
 Let us establish some definitions.  We denote a \textbf{graph} as $G = \{\mathcal{V}, \mathcal{E}\}$ where $\mathcal{V}$ represents a unique set of \textbf{vertices}, and $\mathcal{E}$ a set of \textbf{edges}\cite{Koller:2009ty}.  We shall assume the set of vertices $\mathcal{V} = V_1, V_2, ..., V_n$.  A pair of vertices may be connected by an edge.  For the purposes of this dissertation, we shall require that all edges are \textbf{directed} (though for some applications outside this work, it is also possible for edges to be \textbf{undirected}).  Written as $V_i \rightarrow V_j$ (or equivalently $V_i \leftarrow V_j$ and $V_j \rightarrow V_i$), directed edges restrict graph traversal in one direction (thus enforcing a traversal order when reconstructing a region of the genome).  A vertex may have a number of incoming (outgoing) edges, the precise count being referred to as a vertex's \textbf{in- (out-) degree}.  We shall also refer to any vertex with an in-degree or out-degree greater than $1$ as a \textbf{junction}.
 
-A \textbf{path} is a sequence of adjacent vertices that respects these edge relationships, i.e. $V_i, ..., V_k$ such that for every $j = i, ..., k$, we have $V_j \rightarrow V_{j+1}$.  In Figure \ref{fig:examplegraph}, the vertex sequence $A, B, C, F$ forms a path.  Similarly, a \textbf{trail} denotes a sequence of adjacent vertices, but does not respect the directionality of the edges.  In Figure \ref{fig:examplegraph}, the sequence $F, E, D, A$ forms a trail.  Edges can optionally carry \textbf{weight}, indicating an arbitrary cost for traversing from one vertex to another via particular edges.  Unless otherwise specified, we shall assume the edge weight is always $1$ (however, see Chapter \ref{ch:discussion} for a discussion on circumstances where weights might be a fruitful parameter in a graphical model of sequence assembly).
+A \textbf{path} is a sequence of adjacent vertices that respects these edge relationships, i.e. $V_i, ..., V_k$ such that for every $j = i, ..., k$, we have $V_j \rightarrow V_{j+1}$.  In Figure \ref{fig:examplegraph}, the vertex sequence $A, B, C, F$ forms a path.  Similarly, a \textbf{trail} denotes a sequence of adjacent vertices, but does not respect the directionality of the edges.  In Figure \ref{fig:examplegraph}, the sequence $F, E, D, A$ forms a trail.  Edges can optionally carry \textbf{weight}, indicating an arbitrary cost for traversing from one vertex to another via particular edges.  We shall assume the edge weight is always $1$ (however, see Chapter \ref{ch:discussion} for a discussion on circumstances where weights might be a fruitful parameter in a graphical model of sequence assembly).
 
 A \textbf{multi-color graph} is a useful extension for multi-sample scenarios.  Each edge carries additional metadata used to denote sample identity (e.g. each sample is assigned a unique "color").  All kmers in all samples are added to the graph, and following the edges with the same color yields the genome of that sample.  Many kmers will not be accessible when traversing paths or trails in one color versus another.  These motifs are the hallmark of most variation in a graphical setting.
 
@@ -66,7 +68,7 @@ We rely on the Cortex assembly software for construction of the graph.  Cortex r
   \label{fig:cortexrecords}
 \end{figure}
 
-The Cortex de Bruijn graph can be easily represented as a hash table where each key is a CortexKmer and the associated value a list of incoming and outgoing edges.  This enables lookups to be performed in $\mathcal{O}(1)$ time, but requires the entire graph be loaded into memory.  While this makes sense from the perspective of a software developer writing assembly software (where one would assume that every kmer will be processed during the lifetime of the program's execution), it is cumbersome for our purposes.  DNMs are anticipated to be scant, which implies that the number of kmers that need to be examined is modest.  Furthermore, should we wish to scale to larger genomes in the future (e.g. mammalian genomes on the order of $3$ gigabases), we must be aware of the much greater difficulty in loading such a graph entirely into memory (unless one happens to be operating on a computer with several hundred gigabytes of available RAM).  Instead, we sort the Cortex graphs and perform a binary search whenever we need to load the CortexRecord associated with a particular CortexKmer.  This increases the time complexity for kmer lookups to $\mathcal{O}(\log{}n)$, but eliminates the need to load the entire graph to memory.
+The Cortex de Bruijn graph can be easily represented as a hash table where each key is a CortexKmer and the associated value a list of coverage levels and incoming/outgoing edges per sample.  This enables lookups to be performed in $\mathcal{O}(1)$ time, but requires the entire graph be loaded into memory.  While this makes sense from the perspective of a software developer writing assembly software (where one would assume that every kmer will be processed during the lifetime of the program's execution), it is cumbersome for our purposes.  DNMs are anticipated to be scant, which implies that the number of kmers that need to be examined is modest.  Furthermore, should we wish to scale to larger genomes in the future (e.g. mammalian genomes on the order of $3$ gigabases), we must be aware of the much greater difficulty in loading such a graph entirely into memory (unless one happens to be operating on a computer with several hundred gigabytes of available RAM).  Instead, we lexicographically sort the Cortex graphs based on the CortexKmer of the record and perform a binary search whenever we need to load the CortexRecord associated with a particular CortexKmer.  This increases the time complexity for kmer lookups to $\mathcal{O}(\log{}n)$, but eliminates the need to load the entire graph to memory.
 
 We define a series of utility functions that aid graph traversal.  The \textbf{\texttt{findRecord}} method retrieves the CortexRecord indexed by a kmer via a binary search over the sorted disk-based graph, or throws an error if the graph is not sorted.  The CortexKmer within the CortexRecord, in addition to carrying the text of the kmer, also stores a bit that indicates whether the stored orientation matches the requested orientation, which is useful for navigation.  The methods \textbf{\texttt{getPrevKmers}} and \textbf{\texttt{getNextKmers}} retrieve lists of kmers connected to incoming and outgoing edges of the specified kmer, orientation-matched to the kmer \texttt{sk}.
 
@@ -205,7 +207,7 @@ We first seek to build a list of novel kmers that are both \textit{confident} (i
 
 For a deeply sequenced sample, we expect all kmers in the genome to be of similarly high coverage.  While there will inevitably be regions of the genome where coverage is poor owing to failure to amplify regions with high GC content, the Lander-Waterman statistics in Chapter \ref{ch:motivation} suggest we should easily see many copies of the entire \textit{P. falciparum} genome at a coverage of $100x$.  We can therefore assume that failure to reach a certain coverage threshold is indicative of sequencing error, and such kmers can be removed as candidates from the novel kmer list.
 
-The problem remains as to where the threshold should be set.  For each sample, we plotted the histogram of kmer coverage, shown in Figure \ref{fig:covthreshold}, smoothing the resulting distribution with a non-parametric LOESS fit.  The smoothed histogram makes it easier to find the first local minimum using Algorithm \ref{alg:localminimum}.
+The problem remains as to where the threshold should be set.  For each sample, we plotted the histogram of kmer coverage, shown in Figure \ref{fig:covthreshold}, smoothing the resulting distribution with a non-parametric LOESS fit.  We assumed that sequencing error was fairly random, such that the kmers generated due to error rarely reoccurred and should consequently have low coverage.  In Figure \ref{fig:covthreshold}, the initial decay of kmers from $0$ to $10x$ would appear to be the result of sequencing error, while the later regularly-spaced local maxima should indicate kmer coverage for regions that are copy-number $1$, $2$, $3$, etc.  Thus, the coverage threshold should be placed in the first local minimum between the errorful kmers and the copy-number $1$ peak.  The smoothed histogram makes it easier to find the first local minimum using Algorithm \ref{alg:localminimum}.
 
 \begin{algorithm}
 \caption{Compute the local minimum of a kmer coverage distribution}
@@ -234,7 +236,7 @@ Contamination can occur during sequencing library preparation due to handling fr
 
 To remove the effects of contamination, we run every confident novel kmer through BLAST\cite{Altschul:1990dw}.  Specifically, we used the \texttt{blastn} package and all available BLAST nucleotide databases to identify the likely species of every confident novel $47$-mer in each sample.  Any unidentified kmer or apparently \textit{P. falciparum} kmer was retained; all others were removed.  In practice, this removes anywhere from dozens to thousands of kmers from needing to be considered; as evidenced by Figure \ref{fig:contam}, the exact number varies as each sample is prepared independently, at different times and by different personnel.
 
-\begin{sidewaysfigure}[h!]
+\begin{sidewaysfigure}[p]
   \centering
     \includegraphics[width=\textwidth]{contam}
   \caption{Removal of contaminating kmers; \textit{P. falciparum} kmers are shown in green; the putative contaminants are shown in orange.}
@@ -342,7 +344,7 @@ The solution is to instead conduct a DFS with stopping conditions and recursivel
 
 Stopping conditions are implemented as a callback object, permitting programmer-specified limits for different situations.  To type DNMs, we begin traversal at a novel kmer, walking forward and backward in the graph until the stopping conditions are met.  We then explore the parental graphs based on the subgraph we loaded for the child.  As the parental traversals have some additional information (namely, the presence of the child's subgraph allows us to check if a parental traversal has diverged and rejoined from the graph), the stopping conditions are different.
 
-The stopping condition callback object implements two boolean methods: \texttt{hasTraversalSucceeded} and \texttt{hasTraversalFailed}.  Both of them may return \texttt{false}, in which case the traversal continues.  If either returns \texttt{true}, traversal is halted and the branch is evaluated for retention or rejection.
+The stopping condition callback object implements two boolean method prototypes: \texttt{hasTraversalSucceeded} and \texttt{hasTraversalFailed}.  Both of them may return \texttt{false}, in which case the traversal continues.  If either returns \texttt{true}, traversal is halted and the branch is evaluated for retention or rejection.
 
 \subsubsection{Stopping conditions for child}
 
@@ -443,7 +445,7 @@ Let us first detail how we annotate the viable starts and ends of the variant, w
 \begin{algorithm}
 \caption{Annotating possible variant starts and ends of the subgraph}
 \label{alg:annotate_subgraph}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{annotateStartsAndEnds}{b}
     \For{av in b.vertexSet()}
         \If{(b.outDegreeOf(av) > 1)}
@@ -504,7 +506,7 @@ E. W. Dijkstra described his shortest path algorithm in 1959\cite{Dijkstra:1959c
 \begin{algorithm}
 \caption{Finding the shortest path in a graph}
 \label{alg:dijkstra}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{dspa}{graph, source, destination, color}
     \State dist = \{\}
     \State prev = \{\}
@@ -561,7 +563,7 @@ This algorithm will return the child and parental haplotypes.  To identify the p
 \begin{algorithm}
 \caption{Trim back haplotypes to reveal alleles}
 \label{alg:trim}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{trimHaplotypes}{child, parent}
     \State e0 = child.length() - 1
     \State e1 = parent.length() - 1
@@ -582,6 +584,13 @@ This algorithm will return the child and parental haplotypes.  To identify the p
 
 \subsubsection{Classify event}
 
+\begin{figure}[p]
+  \centering
+    \includegraphics[width=\textwidth]{classification}
+  \caption{Decision tree for \textit{de novo} variant classification.}
+  \label{fig:classification}
+\end{figure}
+
 For simple variants (those that conform to the bubble motif), event classification is reasonably straightforward.  We simply inspect the recovered alleles and evaluate them against simple rules.  For example, a SNP should be a single nucleotide in length.  An insertion should have a parental allele length of $1$ and a child allele length $> 1$.
 
 To classify complex variants, we rely on other heuristics.  GC events are classified by keeping track of which parent the child's genome appears to be exclusively copying from (simply by measuring when kmer coverage has dropped from one parent and returned in the other), detailed in Algorithm \ref{alg:hasSwitches}.  NAHR events, involving recombinations between different chromosomes, are detected by examining if any kmers are uniquely found on different chromosomes, detailed in Algorithm \ref{alg:hasChimeras}.
@@ -589,7 +598,7 @@ To classify complex variants, we rely on other heuristics.  GC events are classi
 \begin{algorithm}
 \caption{Stretch has switches}
 \label{alg:hasSwitches}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{hasSwitches}{graph, stretch}
     \State inherit = []
     \ForAll{$47$-bp kmers $k$ in stretch}
@@ -650,7 +659,7 @@ To classify complex variants, we rely on other heuristics.  GC events are classi
 \begin{algorithm}
 \caption{Stretch has chimeras}
 \label{alg:hasChimeras}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{hasChimeras}{stretch, lookup}
     \State chrCount = \{\}
 
@@ -665,13 +674,6 @@ To classify complex variants, we rely on other heuristics.  GC events are classi
 \end{algorithmic}
 \end{algorithm}
 
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=\textwidth]{classification}
-  \caption{}
-  \label{fig:classification}
-\end{figure}
-
 The classification algorithm can be described by the decision tree in Figure \ref{fig:classification}.
 
 \subsubsection{Choosing haplotypic background}
@@ -681,7 +683,7 @@ When calling variants, we do not know the haplotypic background upon which a var
 \begin{algorithm}
 \caption{Score variant}
 \label{alg:scoreVariant}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{chooseVariant}{gvc}
     \State scores = []
 
@@ -723,7 +725,7 @@ If we are in evaluation mode (that is, if we've a novel kmer to variant map alon
 \begin{algorithm}
 \caption{Evaluate variant}
 \label{alg:evalVariant}
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \Function{evalVariant}{call, truth, stretch}
     \State relevantVariants = []
 
@@ -790,6 +792,14 @@ If we are in evaluation mode (that is, if we've a novel kmer to variant map alon
         \Comment Maybe what we've found is a truncated version of what we were expecting
         \State knownRef = vi.ref
         \State knownAlt = vi.alt == null ? "" : vi.alt
+
+        \algstore{evalVariant}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+        \algrestore{evalVariant}
 
         \If{(!found \&\& knownRef.length() > ref.length() \&\& knownAlt.length() > alt.length() \&\& knownRef.length() == knownAlt.length())}
             \State refFw = ref;
@@ -927,4 +937,4 @@ Many NAHR events are classified as "unknown".  This is perhaps not unreasonable.
 
 \section{Summary}
 
-We have presented our algorithms for identifying and typing \textit{de novo} variation in cross/pedigree data.  At the heart of our approach is a graphical model based on a de Bruijn graph representation of sequencing data from parents and children.  We exploit the novel kmer generation property of DNMs to discover regions of the graph worth exploring for DNM activity, being careful to discard kmers seemingly arising from error.  This approach appears to work well in simulation, typically recovering bubble-motif events well and exhibiting predicted difficulty with more complex, linear-motif events (those involving some form of recombination).
+We have presented our algorithms for identifying and typing \textit{de novo} variation in cross and pedigree data.  At the heart of our approach is a graphical model based on a de Bruijn graph representation of sequencing data from parents and children.  We exploit the novel kmer generation property of DNMs to discover regions of the graph worth exploring for DNM activity, being careful to discard kmers seemingly arising from error.  This approach appears to work well in simulation, typically recovering bubble-motif events well and exhibiting predicted difficulty with more complex, linear-motif events (those involving some form of recombination).

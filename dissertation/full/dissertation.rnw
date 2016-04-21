@@ -1,4 +1,4 @@
-\documentclass[11pt, twoside, openright]{ociamthesis}
+\documentclass[11pt,oneside]{ociamthesis}
 
 <<settings, include=FALSE>>=
 opts_chunk$set(concordance=TRUE, cache=TRUE);
@@ -15,6 +15,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \usepackage{tabularx}
 \usepackage{amsmath}
 \usepackage{algorithm}
+\usepackage{algcompatible}
 \usepackage{lscape}
 \usepackage{rotating}
 \usepackage{mathrsfs}
@@ -25,6 +26,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 \usepackage[font=normal,labelfont=bf]{caption}
 \usepackage[superscript]{cite}
 \usepackage[toc,page]{appendix}
+%\usepackage[natbib=true,style=numeric,sorting=none]{biblatex}
 \renewcommand{\citedash}{--}
 
 \RequirePackage[osf,sc]{mathpazo}
@@ -105,7 +107,7 @@ opts_chunk$set(concordance=TRUE, cache=TRUE);
 % ============
 % Bibliography
 % ============
-\addcontentsline{toc}{chapter}{Bibliography}
+\addcontentsline{toc}{chapter}{References}
 \renewcommand{\bibname}{References}
 \bibliography{/Users/kiran/Documents/allpapers}
 \bibliographystyle{unsrt}
