@@ -1,0 +1,136 @@
+@font-face {
+  font-family: "et-book";
+  src: url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.eot");
+  src: url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff") format("woff"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.ttf") format("truetype"), url("et-book/et-book-roman-line-figures/et-book-roman-line-figures.svg#etbookromanosf") format("svg");
+  font-weight: normal;
+  font-style: normal
+}
+
+@font-face {
+  font-family: "et-book";
+  src: url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.eot");
+  src: url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff") format("woff"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.ttf") format("truetype"), url("et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.svg#etbookromanosf") format("svg");
+  font-weight: normal;
+  font-style: italic
+}
+
+@font-face {
+  font-family: "et-book";
+  src: url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.eot");
+  src: url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff") format("woff"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.ttf") format("truetype"), url("et-book/et-book-bold-line-figures/et-book-bold-line-figures.svg#etbookromanosf") format("svg");
+  font-weight: bold;
+  font-style: normal
+}
+
+@font-face {
+  font-family: "et-book-roman-old-style";
+  src: url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.eot");
+  src: url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.eot?#iefix") format("embedded-opentype"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.woff") format("woff"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.ttf") format("truetype"), url("et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.svg#etbookromanosf") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+html {
+    font-family: et-book, Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    margin: 0px;
+    padding: 0px;
+    width: 210mm;
+}
+
+a {
+    /*color: #FEBA0D;*/
+    color: #84EBFC;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #84EBFC;
+    text-decoration: none;
+}
+
+#header ul {
+    text-align: right;
+    list-style-position: inside;
+    list-style: none;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+#address {
+    float: right;
+    line-height: 16px;
+}
+
+#contact {
+    float: right;
+    font-size: 10px;
+    font-family: monospace;
+    line-height: 16px;
+}
+
+#about {
+    padding-top: 100px;
+    padding-left: 50px;
+}
+
+#name {
+    text-transform: uppercase;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.entry {
+    padding-left: 50px;
+}
+
+.tasks {
+    margin-top: 3px;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 24px;
+    font-style: italic;
+    font-weight: bold;
+    padding-left: 13px;
+}
+
+.title {
+    line-height: 16px;
+    font-weight: bold;
+    font-size: 16px;
+    background: #efc94c;
+}
+
+.date {
+    line-height: 16px;
+    font-size: 13px;
+    padding-left: 5px;
+}
+
+.employer {
+    font-weight: bold;
+}
+
+.dissertation{
+    font-style: italic;
+}
+
+#skills li {
+    margin-left: 50px;
+}
+
+.skill {
+    width: 500px;
+    font-weight: bold;
+}
+
+#publications li {
+    margin-left: 50px;
+    padding-bottom: 10px;
+}
